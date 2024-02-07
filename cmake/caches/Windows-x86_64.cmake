@@ -1,4 +1,5 @@
 set(LLVM_ENABLE_PROJECTS
+      clang
       lld
       lldb
     CACHE STRING "")
@@ -88,6 +89,7 @@ set(LLVM_TOOLCHAIN_TOOLS
     CACHE STRING "")
 
 set(CLANG_TOOLS
+    clang
     CACHE STRING "")
 
 set(LLD_TOOLS
