@@ -127,12 +127,10 @@ set(LLDB_TOOLS
       lldb-argdumper
       lldb-python-scripts
       lldb-server
-      lldb-dap
-      repl_swift
+      lldb-vscode
     CACHE STRING "")
 
 set(LLVM_DISTRIBUTION_COMPONENTS
-      IndexStore
       libclang
       libclang-headers
       LTO
