@@ -125,8 +125,6 @@ set(LLDB_TOOLS
     CACHE STRING "")
 
 set(LLVM_DISTRIBUTION_COMPONENTS
-      libclang
-      libclang-headers
       LTO
       runtimes
       ${LLVM_TOOLCHAIN_TOOLS}
