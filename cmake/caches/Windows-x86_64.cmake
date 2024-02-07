@@ -1,8 +1,7 @@
 set(LLVM_ENABLE_PROJECTS
-      clang
-      clang-tools-extra
       lld
       lldb
+      polly
     CACHE STRING "")
 
 set(LLVM_ENABLE_RUNTIMES

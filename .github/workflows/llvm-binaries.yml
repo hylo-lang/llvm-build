@@ -199,7 +199,6 @@ jobs:
                 -D PACKAGE_VENDOR=compnerd.org `
                 -D LLVM_PARALLEL_LINK_JOBS=2 `
                 -D LLVM_APPEND_VC_REV=NO `
-                -D LLVM_ENABLE_PROJECTS=lld;lldb;polly `
                 -D LLVM_VERSION_SUFFIX="" `
                 -D LLDB_PYTHON_EXE_RELATIVE_PATH=python.exe `
                 -D LLDB_PYTHON_EXT_SUFFIX=.pyd `
