@@ -1,7 +1,6 @@
 set(LLVM_ENABLE_PROJECTS
       lld
       lldb
-      polly
     CACHE STRING "")
 
 set(LLVM_ENABLE_RUNTIMES
