@@ -16,7 +16,7 @@ set(ENABLE_X86_RELAX_RELOCATIONS YES CACHE BOOL "")
 
 # NOTE(compnerd) we can hardcode the default target triple since the cache files
 # are target dependent.
-set(LLVM_DEFAULT_TARGET_TRIPLE x86_64-unknown-windows-msvc CACHE STRING "")
+pppset(LLVM_DEFAULT_TARGET_TRIPLE x86_64-unknown-windows-msvc CACHE STRING "")
 
 set(LLVM_APPEND_VC_REV NO CACHE BOOL "")
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR YES CACHE BOOL "")
@@ -45,6 +45,7 @@ set(LLVM_TARGETS_TO_BUILD AArch64 ARM WebAssembly X86 CACHE STRING "")
 # differences (and in some cases weird build errors on a complete build).
 set(LLVM_BUILD_LLVM_DYLIB NO CACHE BOOL "")
 set(LLVM_BUILD_LLVM_C_DYLIB NO CACHE BOOL "")
+set(LLVM_BUILD_TESTS NO CACHE BOOL "Build LLVM unit tests. If OFF, just generate build targets.")
 set(LLVM_ENABLE_LIBEDIT NO CACHE BOOL "")
 set(LLVM_ENABLE_LIBXML2 NO CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC NO CACHE BOOL "")
@@ -55,6 +56,7 @@ set(LLVM_INCLUDE_BENCHMARKS NO CACHE BOOL "")
 set(LLVM_INCLUDE_DOCS NO CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES NO CACHE BOOL "")
 set(LLVM_INCLUDE_GO_TESTS NO CACHE BOOL "")
+set(LLVM_INCLUDE_TESTS NO CACHE BOOL "Generate build targets for the LLVM unit tests.")
 set(LLVM_TOOL_GOLD_BUILD NO CACHE BOOL "")
 set(LLVM_TOOL_LLVM_SHLIB_BUILD NO CACHE BOOL "")
 
