@@ -110,7 +110,6 @@ set(LLVM_TOOLCHAIN_TOOLS
 set(CLANG_TOOLS
       clang
       clangd
-      clang-deps-launcher
       clang-format
       clang-resource-headers
       clang-scan-deps
