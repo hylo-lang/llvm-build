@@ -105,7 +105,6 @@ set(LLDB_TOOLS
 
 set(LLVM_DISTRIBUTION_COMPONENTS
       LTO
-      runtimes
       ${LLVM_TOOLCHAIN_TOOLS}
       ${CLANG_TOOLS}
       ${LLD_TOOLS}
