@@ -110,12 +110,6 @@ set(LLVM_TOOLCHAIN_TOOLS
     CACHE STRING "")
 
 set(CLANG_TOOLS
-      clang
-      clangd
-      clang-format
-      clang-resource-headers
-      clang-scan-deps
-      clang-tidy
     CACHE STRING "")
 
 set(LLD_TOOLS

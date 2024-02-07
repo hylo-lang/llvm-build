@@ -16,7 +16,7 @@ set(ENABLE_X86_RELAX_RELOCATIONS YES CACHE BOOL "")
 
 # NOTE(compnerd) we can hardcode the default target triple since the cache files
 # are target dependent.
-pppset(LLVM_DEFAULT_TARGET_TRIPLE x86_64-unknown-windows-msvc CACHE STRING "")
+set(LLVM_DEFAULT_TARGET_TRIPLE x86_64-unknown-windows-msvc CACHE STRING "")
 
 set(LLVM_APPEND_VC_REV NO CACHE BOOL "")
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR YES CACHE BOOL "")
@@ -110,12 +110,6 @@ set(LLVM_TOOLCHAIN_TOOLS
     CACHE STRING "")
 
 set(CLANG_TOOLS
-      clang
-      clangd
-      clang-format
-      clang-resource-headers
-      clang-scan-deps
-      clang-tidy
     CACHE STRING "")
 
 set(LLD_TOOLS
