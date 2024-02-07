@@ -162,7 +162,7 @@ jobs:
           key: sccache-windows-${{ matrix.arch }}-compilers
           variant: sccache
 
-      - name: Configure Compilers
+      - name: Configure LLVM
         run: |
           if ( "${{ matrix.arch }}" -eq "arm64" ) {
             $CMAKE_SYSTEM_NAME="-D CMAKE_SYSTEM_NAME=Windows"
@@ -199,6 +199,7 @@ jobs:
                 -D PACKAGE_VENDOR=compnerd.org `
                 -D LLVM_PARALLEL_LINK_JOBS=2 `
                 -D LLVM_APPEND_VC_REV=NO `
+                -D LLVM_ENABLE_PROJECTS=lld;lldb;polly `
                 -D LLVM_VERSION_SUFFIX="" `
                 -D LLDB_PYTHON_EXE_RELATIVE_PATH=python.exe `
                 -D LLDB_PYTHON_EXT_SUFFIX=.pyd `
@@ -208,13 +209,13 @@ jobs:
                 -D Python3_LIBRARY=$env:PYTHON_LOCATION_${{ matrix.arch }}\libs\python39.lib `
                 -D Python3_ROOT_DIR=$env:pythonLocation
 
-      - name: Build Compiler Distribution
+      - name: Build LLVM Distribution
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
 
-      - name: Install Compiler Distribution
+      - name: Install LLVM Distribution
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target install-distribution-stripped
 
-      - name: Upload Compilers
+      - name: Upload LLVM
         uses: actions/upload-artifact@v4
         with:
           name: compilers-${{ matrix.arch }}
