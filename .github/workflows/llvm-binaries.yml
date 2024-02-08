@@ -226,7 +226,6 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z
 
