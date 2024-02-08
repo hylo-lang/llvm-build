@@ -222,7 +222,7 @@ jobs:
 
       - name: Package LLVM
         run: |
-          7z a -t7z ${{ github.workspace }}\BuildRoot\Library llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z
+          7z a -t7z llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z ${{ github.workspace }}\BuildRoot\Library
 
       - name: Release
         uses: softprops/action-gh-release@v1
