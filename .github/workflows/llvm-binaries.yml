@@ -220,6 +220,16 @@ jobs:
           name: compilers-${{ matrix.arch }}
           path: ${{ github.workspace }}/BuildRoot/Library
 
+      - name: Package LLVM
+        run: |
+          7z a -t7z ${{ github.workspace }}\BuildRoot\Library llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z
+
       # TODO(compnerd) this takes ~1h due to the size, see if we can compress first
       - uses: actions/upload-artifact@v4
         if: false # ${{ inputs.debug_info }}
