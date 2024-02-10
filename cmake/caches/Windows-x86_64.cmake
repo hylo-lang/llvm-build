@@ -107,6 +107,7 @@ set(LLDB_TOOLS
 
 set(LLVM_DISTRIBUTION_COMPONENTS
       LTO
+      cmake-exports
       ${LLVM_TOOLCHAIN_TOOLS}
       ${CLANG_TOOLS}
       ${LLD_TOOLS}
