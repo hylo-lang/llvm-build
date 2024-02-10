@@ -218,11 +218,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compilers-${{ matrix.arch }}
-          path: ${{ github.workspace }}/BuildRoot/Library
+          path: ${{ github.workspace }}/BuildRoot/Library/Developer/Toolchains/unknown-Asserts-development.xctoolchain/usr
 
       - name: Package LLVM
         run: |
-          7z a -t7z llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z ${{ github.workspace }}\BuildRoot\Library
+          7z a -t7z llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-msvc17-release.7z ${{ github.workspace }}\BuildRoot\Library\Developer/Toolchains/unknown-Asserts-development.xctoolchain/usr
 
       - name: Release
         uses: softprops/action-gh-release@v1
