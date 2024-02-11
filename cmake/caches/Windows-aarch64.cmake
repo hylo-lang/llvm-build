@@ -105,12 +105,3 @@ set(LLDB_TOOLS
       lldb-server
       lldb-vscode
     CACHE STRING "")
-
-set(LLVM_DISTRIBUTION_COMPONENTS
-      LTO
-      cmake-exports
-      ${LLVM_TOOLCHAIN_TOOLS}
-      ${CLANG_TOOLS}
-      ${LLD_TOOLS}
-      ${LLDB_TOOLS}
-    CACHE STRING "")
