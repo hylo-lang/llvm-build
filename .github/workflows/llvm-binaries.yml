@@ -208,11 +208,11 @@ jobs:
                 -D Python3_LIBRARY=$env:PYTHON_LOCATION_${{ matrix.arch }}\libs\python39.lib `
                 -D Python3_ROOT_DIR=$env:pythonLocation
 
-      - name: Build LLVM Distribution
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
+      - name: Build LLVM
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1
 
-      - name: Install LLVM Distribution
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target install-distribution-stripped
+      - name: Install LLVM
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target install
 
       - name: Upload LLVM
         uses: actions/upload-artifact@v4
