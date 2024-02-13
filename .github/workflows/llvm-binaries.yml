@@ -56,20 +56,21 @@ jobs:
 
       - name: Configure Tools
         run: >-
+
           cmake -B ${{ github.workspace }}/BinaryCache/0
-                -D CMAKE_BUILD_TYPE=Release
-                -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-                -D CMAKE_C_COMPILER_LAUNCHER=sccache
-                -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-                -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-                -D CMAKE_MT=mt
-                -G Ninja
-                -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-                -D LLVM_ENABLE_ASSERTIONS=NO
-                -D LLVM_ENABLE_LIBEDIT=NO
-                -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
-                -D LLDB_ENABLE_PYTHON=NO
-                -D LLDB_INCLUDE_TESTS=NO
+          -D CMAKE_BUILD_TYPE=Release
+          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_MT=mt
+          -G Ninja
+          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          -D LLVM_ENABLE_ASSERTIONS=NO
+          -D LLVM_ENABLE_LIBEDIT=NO
+          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
+          -D LLDB_ENABLE_PYTHON=NO
+          -D LLDB_INCLUDE_TESTS=NO
 
       - name: Build llvm-tblgen
         run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target llvm-tblgen
@@ -177,9 +178,11 @@ jobs:
           ref: llvmorg-${{ inputs.llvm_version }}
           path: ${{ github.workspace }}/SourceCache/llvm-project
           show-progress: false
+
       - uses: actions/checkout@v4
         with:
           path: ${{ github.workspace }}/SourceCache/llvm-build
+          show-progress: false
 
       - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
         uses: actions/setup-python@v5
@@ -219,21 +222,23 @@ jobs:
       - name: Build/Install Python ${{ env.PYTHON_VERSION }} (arm64)
         if: matrix.arch == 'arm64' && matrix.os != 'windows-latest'
         run: >-
+
           cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }}
-                -S ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
-                -B ${{ github.workspace }}/BinaryCache/python
-                -D CMAKE_C_COMPILER_LAUNCHER=sccache
-                -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-                -D CMAKE_C_COMPILER=clang
-                -D CMAKE_CXX_COMPILER=clang++
-                -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}
-                -D CMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
+          -B ${{ github.workspace }}/BinaryCache/python
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_C_COMPILER=clang
+          -D CMAKE_CXX_COMPILER=clang++
+          -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}
+          -D CMAKE_BUILD_TYPE=Release
 
           cmake --build ${{ github.workspace }}/BinaryCache/python --target install
 
       - name: Export Target Python Location
         if: matrix.os != 'windows-latest' && ${{ matrix.arch == 'amd64' }}
         run: >-
+
           echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}\tools"
           ${{ matrix.into_environment }}
 
@@ -266,37 +271,37 @@ jobs:
         run: >-
 
           cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }} ${{ matrix.lldb_enable_libxml2 }}
-                -B ${{ github.workspace }}/BinaryCache/1
-                -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
-                -D CMAKE_BUILD_TYPE=Release
-                -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-                -D CMAKE_C_COMPILER_LAUNCHER=sccache
-                -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-                -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-                -D CMAKE_MT=mt
-                -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.LLVM_CONFIG }}
-                -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-                -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen.exe
-                -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen.exe
-                -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen.exe
-                -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config.exe
-                -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
-                -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen.exe
-                -D LLVM_USE_HOST_TOOLS=NO
-                -D CLANG_VENDOR=hylo-lang.org
-                -D CLANG_VENDOR_UTI=org.hylo-lang.dt
-                -D PACKAGE_VENDOR=hylo-lang.org
-                -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
-                -D LLVM_PARALLEL_LINK_JOBS=2
-                -D LLVM_APPEND_VC_REV=NO
-                -D LLVM_VERSION_SUFFIX=""
-                -D LLDB_PYTHON_EXE_RELATIVE_PATH=python.exe
-                -D LLDB_PYTHON_EXT_SUFFIX=.pyd
-                -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
-                -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
-                -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}\include
-                -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}\libs\python39.lib
-                -D Python3_ROOT_DIR=${{ env.pythonLocation }}
+          -B ${{ github.workspace }}/BinaryCache/1
+          -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
+          -D CMAKE_BUILD_TYPE=Release
+          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_MT=mt
+          -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.LLVM_CONFIG }}
+          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen.exe
+          -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen.exe
+          -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen.exe
+          -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config.exe
+          -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
+          -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen.exe
+          -D LLVM_USE_HOST_TOOLS=NO
+          -D CLANG_VENDOR=hylo-lang.org
+          -D CLANG_VENDOR_UTI=org.hylo-lang.dt
+          -D PACKAGE_VENDOR=hylo-lang.org
+          -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
+          -D LLVM_PARALLEL_LINK_JOBS=2
+          -D LLVM_APPEND_VC_REV=NO
+          -D LLVM_VERSION_SUFFIX=""
+          -D LLDB_PYTHON_EXE_RELATIVE_PATH=python.exe
+          -D LLDB_PYTHON_EXT_SUFFIX=.pyd
+          -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
+          -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
+          -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}\include
+          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}\libs\python39.lib
+          -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1
