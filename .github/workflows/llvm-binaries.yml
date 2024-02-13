@@ -95,16 +95,21 @@ jobs:
       - name: Build clang-tidy-confusable-chars-gen
         run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target clang-tidy-confusable-chars-gen
 
+      - name: Archive tools
+        working-directory: ${{ github.workspace }}/BinaryCache/0
+        run: >-
+          tar czf tools.tar.gz
+          bin/llvm-tblgen${{ matrix.executable_suffix }}
+          bin/clang-tblgen${{ matrix.executable_suffix }}
+          bin/lldb-tblgen${{ matrix.executable_suffix }}
+          bin/llvm-config${{ matrix.executable_suffix }}
+          bin/clang-pseudo-gen${{ matrix.executable_suffix }}
+          bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: build-tools-${{ matrix.os }}
-          path: |
-            ${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
-            ${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
-            ${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-pseudo-gen${{ matrix.executable_suffix }}
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
+          path: ${{ github.workspace }}/BinaryCache/0/tools.tar.gz
 
   distribution:
     needs: [build_tools]
@@ -189,7 +194,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0/bin
+          path: ${{ github.workspace }}/BinaryCache/0/tools.tar.gz
+
+      - name: Extract tools
+        working-directory: ${{ github.workspace }}/BinaryCache/0
+        run: tar xzf tools.tar.gz
 
       - uses: actions/checkout@v4
         with:
