@@ -29,12 +29,16 @@ jobs:
           # Default valuies
           - c_compiler: clang
           - cxx_compiler: clang++
+          - executable_suffix:
 
           # Overrides
           - c_compiler: cl
             os: windows-latest
 
           - cxx_compiler: cl
+            os: windows-latest
+
+          - executable_suffix: .exe
             os: windows-latest
 
     runs-on: ${{ matrix.os }}
@@ -95,12 +99,12 @@ jobs:
         with:
           name: build-tools
           path: |
-            ${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen.exe
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen.exe
-            ${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen.exe
-            ${{ github.workspace }}/BinaryCache/0/bin/llvm-config.exe
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-pseudo-gen.exe
-            ${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen.exe
+            ${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
+            ${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
+            ${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
+            ${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
+            ${{ github.workspace }}/BinaryCache/0/bin/clang-pseudo-gen${{ matrix.executable_suffix }}
+            ${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
 
   distribution:
     needs: [build_tools]
@@ -121,6 +125,7 @@ jobs:
           - cmake_system_processor:
           - lldb_enable_libxml2:
           - into_environment: '>> $GITHUB_ENV'
+          - executable_suffix:
 
           # Overrides
           - into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
@@ -148,6 +153,9 @@ jobs:
 
           - lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
             arch: arm64
+
+          - executable_suffix: .exe
+            os: windows-latest
 
           # Extensions
           - triple_cpu: x86_64
@@ -285,12 +293,12 @@ jobs:
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.LLVM_CONFIG }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-          -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen.exe
-          -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen.exe
-          -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen.exe
-          -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config.exe
+          -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
+          -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
+          -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
+          -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
-          -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen.exe
+          -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
           -D LLVM_USE_HOST_TOOLS=NO
           -D CLANG_VENDOR=hylo-lang.org
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt
@@ -299,7 +307,7 @@ jobs:
           -D LLVM_PARALLEL_LINK_JOBS=2
           -D LLVM_APPEND_VC_REV=NO
           -D LLVM_VERSION_SUFFIX=""
-          -D LLDB_PYTHON_EXE_RELATIVE_PATH=python.exe
+          -D LLDB_PYTHON_EXE_RELATIVE_PATH=python${{ matrix.executable_suffix }}
           -D LLDB_PYTHON_EXT_SUFFIX=.pyd
           -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
           -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
