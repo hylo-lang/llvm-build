@@ -96,20 +96,20 @@ jobs:
         run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target clang-tidy-confusable-chars-gen
 
       - name: Archive tools
-        working-directory: ${{ github.workspace }}/BinaryCache/0
         run: >-
-          tar czf tools.tar.gz
+          tar cf tools.tar
           bin/llvm-tblgen${{ matrix.executable_suffix }}
           bin/clang-tblgen${{ matrix.executable_suffix }}
           bin/lldb-tblgen${{ matrix.executable_suffix }}
           bin/llvm-config${{ matrix.executable_suffix }}
           bin/clang-pseudo-gen${{ matrix.executable_suffix }}
           bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
+        working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - uses: actions/upload-artifact@v4
         with:
           name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0/tools.tar.gz
+          path: ${{ github.workspace }}/BinaryCache/0/tools.tar
 
   distribution:
     needs: [build_tools]
@@ -198,11 +198,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0/tools.tar.gz
+          path: ${{ github.workspace }}/BinaryCache/0/tools.tar
 
       - name: Extract tools
+        run: tar xf tools.tar
         working-directory: ${{ github.workspace }}/BinaryCache/0
-        run: tar xzf tools.tar.gz
 
       - uses: actions/checkout@v4
         with:
