@@ -205,7 +205,7 @@ jobs:
         if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
         run: |
           nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
-          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}\pythonarm64.${{ env.PYTHON_VERSION }}\tools" ${{ matrix.into_environment }}
+          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
 
       - name: Setup sccache
         uses: compnerd/ccache-action@sccache-0.7.4
@@ -243,7 +243,7 @@ jobs:
 
           cmake --build ${{ github.workspace }}/BinaryCache/python --target install
 
-          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}\tools"
+          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}/tools"
           ${{ matrix.into_environment }}
 
       - uses: compnerd/gha-setup-vsdevenv@main
@@ -303,8 +303,8 @@ jobs:
           -D LLDB_PYTHON_EXT_SUFFIX=.pyd
           -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
           -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
-          -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}\include
-          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}\libs\python39.lib
+          -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}/include
+          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}/libs/python39.lib
           -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
