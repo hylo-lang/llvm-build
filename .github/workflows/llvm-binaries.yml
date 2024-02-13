@@ -132,6 +132,7 @@ jobs:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
           - llvm_enable_projects: 'clang;lld'
+          - static_lib_suffix: .a
 
           # Overrides
           - into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
@@ -164,6 +165,9 @@ jobs:
             os: windows-latest
 
           - llvm_enable_projects: 'clang;lld;lldb'
+            os: windows-latest
+
+          - static_lib_suffix: .lib
             os: windows-latest
 
           # Extensions
@@ -326,7 +330,7 @@ jobs:
           -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
           -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
           -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}/include
-          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}/libs/python39.lib
+          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}/libs/python312${{ matrix.static_lib_suffix }}
           -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
