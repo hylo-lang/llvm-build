@@ -20,6 +20,8 @@ env:
 jobs:
   build_tools:
     strategy:
+      fail-fast: false
+
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
 
@@ -102,7 +104,6 @@ jobs:
 
   distribution:
     needs: [build_tools]
-    runs-on: windows-latest
 
     strategy:
       fail-fast: false
@@ -163,6 +164,8 @@ jobs:
 
           - triple_suffix: apple-darwin23.3.0
             os: macos-latest
+
+    runs-on: ${{ matrix.os }}
 
     env:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
