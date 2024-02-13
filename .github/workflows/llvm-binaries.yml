@@ -55,21 +55,22 @@ jobs:
           variant: sccache
 
       - name: Configure Tools
-        run: |
-          cmake -B ${{ github.workspace }}/BinaryCache/0 `
-                -D CMAKE_BUILD_TYPE=Release `
-                -D CMAKE_C_COMPILER=${{ matrix.c_compiler }} `
-                -D CMAKE_C_COMPILER_LAUNCHER=sccache `
-                -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} `
-                -D CMAKE_CXX_COMPILER_LAUNCHER=sccache `
-                -D CMAKE_MT=mt `
-                -G Ninja `
-                -S ${{ github.workspace }}/SourceCache/llvm-project/llvm `
-                -D LLVM_ENABLE_ASSERTIONS=NO `
-                -D LLVM_ENABLE_LIBEDIT=NO `
-                -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb" `
-                -D LLDB_ENABLE_PYTHON=NO `
+        run: >-
+          cmake -B ${{ github.workspace }}/BinaryCache/0
+                -D CMAKE_BUILD_TYPE=Release
+                -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+                -D CMAKE_C_COMPILER_LAUNCHER=sccache
+                -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+                -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+                -D CMAKE_MT=mt
+                -G Ninja
+                -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+                -D LLVM_ENABLE_ASSERTIONS=NO
+                -D LLVM_ENABLE_LIBEDIT=NO
+                -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
+                -D LLDB_ENABLE_PYTHON=NO
                 -D LLDB_INCLUDE_TESTS=NO
+
       - name: Build llvm-tblgen
         run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target llvm-tblgen
       - name: Build clang-tblgen
