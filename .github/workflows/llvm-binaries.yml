@@ -203,9 +203,11 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
-      - name: Install Python ${{ env.PYTHON_VERSION }} (Host) uses:
-        actions/setup-python@v5 id: python with: python-version: '${{
-        env.PYTHON_VERSION }}'
+      - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
+        uses: actions/setup-python@v5
+        id: python
+        with:
+          python-version: '${{ env.PYTHON_VERSION }}'
 
       - name: Export Host Python Location
         run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
