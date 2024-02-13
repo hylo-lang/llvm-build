@@ -202,24 +202,12 @@ jobs:
 
       # TODO(lxbndr) use actions/cache to improve this step timings
       - name: Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: matrix.arch == 'arm64' && matrix.os == 'windows-latest'
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
         run: |
           nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
-
-      - name: Export Target Python Location
-        if: matrix.os == 'windows-latest' && ${{ matrix.arch == 'amd64' }}
-        run: echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}\pythonarm64.${{ env.PYTHON_VERSION }}\tools" ${{ matrix.into_environment }}
-      - name: Fetch Python CMake Build System
-        if: matrix.arch == 'arm64' && matrix.os != 'windows-latest'
-        uses: actions/checkout@v4
-        with:
-          repository: python-cmake-buildsystem
-          ref: master
-          path: ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
-          show-progress: false
+          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}\pythonarm64.${{ env.PYTHON_VERSION }}\tools" ${{ matrix.into_environment }}
 
       - name: Setup sccache
-        if: matrix.arch == 'arm64' && matrix.os != 'windows-latest'
         uses: compnerd/ccache-action@sccache-0.7.4
         with:
           max-size: 500M
@@ -230,8 +218,17 @@ jobs:
         with:
           version: 1.11.1
 
+      - name: Fetch Python CMake Build System
+        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' }}
+        uses: actions/checkout@v4
+        with:
+          repository: python-cmake-buildsystem/python-cmake-buildsystem
+          ref: master
+          path: ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
+          show-progress: false
+
       - name: Build/Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: matrix.arch == 'arm64' && matrix.os != 'windows-latest'
+        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' }}
         run: >-
 
           cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }}
@@ -246,10 +243,6 @@ jobs:
 
           cmake --build ${{ github.workspace }}/BinaryCache/python --target install
 
-      - name: Export Target Python Location
-        if: matrix.os != 'windows-latest' && ${{ matrix.arch == 'amd64' }}
-        run: >-
-
           echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}\tools"
           ${{ matrix.into_environment }}
 
@@ -262,7 +255,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Workaround MSVC#10444970
-        if: matrix.arch == 'arm64' && matrix.os == 'windows-latest'
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
         run: |
           $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
           Set-Content $clangTooling @"
