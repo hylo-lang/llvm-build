@@ -22,17 +22,18 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-      include:
-        # Default valuies
-        - c_compiler: clang
-        - cxx_compiler: clang++
 
-        # Overrides
-        - c_compiler: cl
-          os: windows-latest
+        include:
+          # Default valuies
+          - c_compiler: clang
+          - cxx_compiler: clang++
 
-        - cxx_compiler: cl
-          os: windows-latest
+          # Overrides
+          - c_compiler: cl
+            os: windows-latest
+
+          - cxx_compiler: cl
+            os: windows-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -103,54 +104,59 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         arch: [amd64, arm64]
-      include:
-        # Default values
-        - c_compiler: clang
-        - cxx_compiler: clang++
-        - toolset_suffix:
-        - cmake_system_name:
-        - cmake_system_processor:
-        - lldb_enable_libxml2:
+        
+        include:
+          # Default values
+          - c_compiler: clang
+          - cxx_compiler: clang++
+          - toolset_suffix:
+          - cmake_system_name:
+          - cmake_system_processor:
+          - lldb_enable_libxml2:
+          - into_environment: '>> $GITHUB_ENV'
 
-        # Overrides
-        - c_compiler: cl
-          os: windows-latest
+          # Overrides
+          - into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+            os: windows_latest
 
-        - cxx_compiler: cl
-          os: windows-latest
+          - c_compiler: cl
+            os: windows-latest
 
-        - toolset_suffix: -msvc17
-          os: windows-latest
+          - cxx_compiler: cl
+            os: windows-latest
 
-        - cmake_system_processor: -D CMAKE_SYSTEM_PROCESSOR=ARM64
-          arch: arm64
+          - toolset_suffix: -msvc17
+            os: windows-latest
 
-        - cmake_system_name: -D CMAKE_SYSTEM_NAME=Windows
-          arch: arm64
-          os: windows-latest
+          - cmake_system_processor: -D CMAKE_SYSTEM_PROCESSOR=ARM64
+            arch: arm64
 
-        - cmake_system_name: -D CMAKE_SYSTEM_NAME=Darwin
-          arch: arm64
-          os: macos-latest
+          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Windows
+            arch: arm64
+            os: windows-latest
 
-        - lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
-          arch: arm64
+          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Darwin
+            arch: arm64
+            os: macos-latest
 
-        # Extensions
-        - triple_cpu: x86_64
-          arch: amd64
+          - lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
+            arch: arm64
 
-        - triple_cpu: arm64
-          arch: arm64
+          # Extensions
+          - triple_cpu: x86_64
+            arch: amd64
 
-        - triple_suffix: unknown-windows-msvc17
-          os: windows-latest
+          - triple_cpu: arm64
+            arch: arm64
 
-        - triple_suffix: unknown-linux-gnu
-          os: ubuntu-latest
+          - triple_suffix: unknown-windows-msvc17
+            os: windows-latest
 
-        - triple_suffix: apple-darwin23.3.0
-          os: macos-latest
+          - triple_suffix: unknown-linux-gnu
+            os: ubuntu-latest
+
+          - triple_suffix: apple-darwin23.3.0
+            os: macos-latest
 
     env:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
@@ -180,14 +186,18 @@ jobs:
         with:
           python-version: '${{ env.PYTHON_VERSION }}'
 
+      - name: Export Host Python Location
+        run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
+
       # TODO(lxbndr) use actions/cache to improve this step timings
       - name: Install Python ${{ env.PYTHON_VERSION }} (arm64)
         if: matrix.arch == 'arm64' && matrix.os == 'windows-latest'
         run: |
           nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
-          echo "PYTHON_LOCATION_amd64=$env:pythonLocation" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}\pythonarm64.${{ env.PYTHON_VERSION }}\tools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Export Target Python Location
+        if: matrix.os == 'windows-latest' && ${{ matrix.arch == 'amd64' }}
+        run: echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}\pythonarm64.${{ env.PYTHON_VERSION }}\tools" ${{ matrix.into_environment }}
       - name: Fetch Python CMake Build System
         if: matrix.arch == 'arm64' && matrix.os != 'windows-latest'
         uses: actions/checkout@v4
@@ -220,9 +230,11 @@ jobs:
 
           cmake --build ${{ github.workspace }}/BinaryCache/python --target install
 
-          echo "PYTHON_LOCATION_amd64=$pythonLocation" >> $GITHUB_ENV
-
-          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}\tools" >> $GITHUB_ENV
+      - name: Export Target Python Location
+        if: matrix.os != 'windows-latest' && ${{ matrix.arch == 'amd64' }}
+        run: >-
+          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}\tools"
+          ${{ matrix.into_environment }}
 
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
@@ -281,8 +293,8 @@ jobs:
                 -D LLDB_PYTHON_EXT_SUFFIX=.pyd
                 -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
                 -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
-                -D Python3_INCLUDE_DIR=${{ env.PYTHON_LOCATION }}_${{ matrix.arch }}\include
-                -D Python3_LIBRARY=${{ env.PYTHON_LOCATION }}_${{ matrix.arch }}\libs\python39.lib
+                -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}\include
+                -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}\libs\python39.lib
                 -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
