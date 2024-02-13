@@ -1,9 +1,3 @@
-set(LLVM_ENABLE_PROJECTS
-      clang
-      lld
-      lldb
-    CACHE STRING "")
-
 # NOTE(compnerd) always enable assertions, the toolchain will not provide enough
 # context to resolve issues otherwise and may silently generate invalid output.
 set(LLVM_ENABLE_ASSERTIONS YES CACHE BOOL "")

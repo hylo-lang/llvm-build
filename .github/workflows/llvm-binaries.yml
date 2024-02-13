@@ -126,6 +126,7 @@ jobs:
           - lldb_enable_libxml2:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
+          - llvm_enable_projects: 'clang;lld'
 
           # Overrides
           - into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
@@ -155,6 +156,9 @@ jobs:
             arch: arm64
 
           - executable_suffix: .exe
+            os: windows-latest
+
+          - llvm_enable_projects: 'clang;lld;lldb'
             os: windows-latest
 
           # Extensions
@@ -199,11 +203,9 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
-      - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
-        uses: actions/setup-python@v5
-        id: python
-        with:
-          python-version: '${{ env.PYTHON_VERSION }}'
+      - name: Install Python ${{ env.PYTHON_VERSION }} (Host) uses:
+        actions/setup-python@v5 id: python with: python-version: '${{
+        env.PYTHON_VERSION }}'
 
       - name: Export Host Python Location
         run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
@@ -227,7 +229,7 @@ jobs:
           version: 1.11.1
 
       - name: Fetch Python CMake Build System
-        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' }}
+        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' && false }}
         uses: actions/checkout@v4
         with:
           repository: python-cmake-buildsystem/python-cmake-buildsystem
@@ -236,7 +238,7 @@ jobs:
           show-progress: false
 
       - name: Build/Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' }}
+        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' && false }}
         run: >-
 
           cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }}
@@ -304,6 +306,7 @@ jobs:
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt
           -D PACKAGE_VENDOR=hylo-lang.org
           -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
+          -D LLVM_ENABLE_PROJECTS=${{ matrix.llvm_projects }}
           -D LLVM_PARALLEL_LINK_JOBS=2
           -D LLVM_APPEND_VC_REV=NO
           -D LLVM_VERSION_SUFFIX=""
