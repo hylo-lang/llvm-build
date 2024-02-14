@@ -44,7 +44,7 @@ export SCCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
 export CCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
 
 # Configure LLVM
-rm -f ${github_workspace}/BinaryCache/1/CMakeCache.txt
+#rm -f ${github_workspace}/BinaryCache/1/CMakeCache.txt
 
           cmake -GNinja ${matrix_cmake_system_name} ${matrix_cmake_system_processor} ${matrix_lldb_enable_libxml2} \
 	  --toolchain ~/src/llvm-build/cmake/toolchains/Darwin-arm64.cmake \
@@ -67,6 +67,7 @@ rm -f ${github_workspace}/BinaryCache/1/CMakeCache.txt
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt \
           -D PACKAGE_VENDOR=hylo-lang.org \
           -D LLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE} \
+	  -D LLVM_ENABLE_ZSTD=NO \
           -D LLVM_HOST_TRIPLE=${TARGET_TRIPLE} \
 	  -D LLVM_TARGET_ARCH=${matrix_llvm_target_arch} \
           -D LLVM_ENABLE_PROJECTS="${matrix_llvm_enable_projects}" \
