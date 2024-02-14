@@ -244,34 +244,6 @@ jobs:
         with:
           version: 1.11.1
 
-      - name: Fetch Python CMake Build System
-        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' && false }}
-        uses: actions/checkout@v4
-        with:
-          repository: python-cmake-buildsystem/python-cmake-buildsystem
-          ref: master
-          path: ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
-          show-progress: false
-
-      - name: Build/Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: ${{ matrix.arch == 'arm64' && matrix.os != 'windows-latest' && false }}
-        run: >-
-
-          cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }}
-          -S ${{ github.workspace }}/SourceCache/python-cmake-buildsystem
-          -B ${{ github.workspace }}/BinaryCache/python
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_C_COMPILER=clang
-          -D CMAKE_CXX_COMPILER=clang++
-          -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}
-          -D CMAKE_BUILD_TYPE=Release
-
-          cmake --build ${{ github.workspace }}/BinaryCache/python --target install
-
-          echo "PYTHON_LOCATION_arm64=${{ github.workspace }}/BuildRoot/python-${{ env.PYTHON_VERSION }}-${{ env.TARGET_TRIPLE }}/tools"
-          ${{ matrix.into_environment }}
-
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
         with:
