@@ -9,11 +9,6 @@ on:
         required: false
         type: string
 
-      debug_info:
-        description: 'Emit PDBs (Debug Info)'
-        default: false
-        type: boolean
-
 env:
   SCCACHE_DIRECT: yes
 
