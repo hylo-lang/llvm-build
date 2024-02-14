@@ -27,14 +27,10 @@ jobs:
           - executable_suffix:
 
           # Overrides
-          - c_compiler: cl
-            os: windows-latest
-
-          - cxx_compiler: cl
-            os: windows-latest
-
-          - executable_suffix: .exe
-            os: windows-latest
+          - os: windows-latest
+            c_compiler: cl
+            cxx_compiler: cl
+            executable_suffix: .exe
 
     runs-on: ${{ matrix.os }}
 
