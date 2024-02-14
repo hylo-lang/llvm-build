@@ -155,6 +155,10 @@ jobs:
             arch: arm64
             os: macos-latest
 
+          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Linux
+            arch: arm64
+            os: ubuntu-latest
+
           - lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
             arch: arm64
 
