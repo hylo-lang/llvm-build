@@ -130,6 +130,7 @@ jobs:
           - static_lib_suffix: .a
           - package_command: tar cjf
           - package_suffix: .tar.bz2
+          - compile_cache: sccache
 
           # Overrides
           - os: windows-latest
@@ -186,6 +187,9 @@ jobs:
             triple_suffix: apple-darwin23.3.0
 
 
+          - compile_cache: ccache
+            os: macos-latest
+
     runs-on: ${{ matrix.os }}
 
     env:
@@ -232,12 +236,12 @@ jobs:
           nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
           echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
 
-      - name: Setup sccache
+      - name: Setup ${{ matrix.compile_cache }}
         uses: compnerd/ccache-action@sccache-0.7.4
         with:
           max-size: 500M
-          key: sccache-${{ matrix.os }}-${{ matrix.arch }}-distribution
-          variant: sccache
+          key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}-distribution
+          variant: ${{ matrix.compile_cache }}
 
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
@@ -276,9 +280,9 @@ jobs:
           -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
           -D CMAKE_BUILD_TYPE=Release
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_C_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
