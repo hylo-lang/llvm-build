@@ -132,64 +132,59 @@ jobs:
           - package_suffix: .tar.bz2
 
           # Overrides
-          - into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+          - os: windows-latest
+
+            into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+            c_compiler: cl
+            cxx_compiler: cl
+            toolset_suffix: -msvc17
+            executable_suffix: .exe
+            llvm_enable_projects: 'clang;lld;lldb'
+            static_lib_suffix: .lib
+            package_command: 7z a -t7z
+            package_suffix: .7z
+
+          - arch: arm64
+
+            cmake_system_processor: -D CMAKE_SYSTEM_PROCESSOR=ARM64
+            lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
+
+          - arch: arm64
             os: windows-latest
 
-          - c_compiler: cl
-            os: windows-latest
+            cmake_system_name: -D CMAKE_SYSTEM_NAME=Windows
 
-          - cxx_compiler: cl
-            os: windows-latest
-
-          - toolset_suffix: -msvc17
-            os: windows-latest
-
-          - cmake_system_processor: -D CMAKE_SYSTEM_PROCESSOR=ARM64
-            arch: arm64
-
-          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Windows
-            arch: arm64
-            os: windows-latest
-
-          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Darwin
-            arch: arm64
+          - arch: arm64
             os: macos-latest
 
-          - cmake_system_name: -D CMAKE_SYSTEM_NAME=Linux
-            arch: arm64
+            cmake_system_name: -D CMAKE_SYSTEM_NAME=Darwin
+
+          - arch: arm64
             os: ubuntu-latest
 
-          - lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
-            arch: arm64
-
-          - executable_suffix: .exe
-            os: windows-latest
-
-          - llvm_enable_projects: 'clang;lld;lldb'
-            os: windows-latest
-
-          - static_lib_suffix: .lib
-            os: windows-latest
-
-          - package_command: 7z a -t7z
-            package_suffix: .7z
-            os: windows-latest
+            cmake_system_name: -D CMAKE_SYSTEM_NAME=Linux
 
           # Extensions
-          - triple_cpu: x86_64
-            arch: amd64
+          - arch: amd64
 
-          - triple_cpu: arm64
-            arch: arm64
+            triple_cpu: x86_64
 
-          - triple_suffix: unknown-windows-msvc17
-            os: windows-latest
+          - arch: arm64
 
-          - triple_suffix: unknown-linux-gnu
-            os: ubuntu-latest
+            triple_cpu: arm64
 
-          - triple_suffix: apple-darwin23.3.0
-            os: macos-latest
+          - os: windows-latest
+
+            triple_suffix: unknown-windows-msvc17
+
+          - os: ubuntu-latest
+
+            triple_suffix: unknown-linux-gnu
+
+          - os: macos-latest
+
+            triple_suffix: apple-darwin23.3.0
+
 
     runs-on: ${{ matrix.os }}
 
@@ -197,7 +192,7 @@ jobs:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
       PYTHON_VERSION: 3.12.2
       TARGET_TRIPLE: ${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}
-      PACKAGE_NAME: llvm-${{ input.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-release
+      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-release
 
     steps:
       - uses: actions/download-artifact@v4
