@@ -46,7 +46,7 @@ export CCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
 # Configure LLVM
 rm -f ${github_workspace}/BinaryCache/1/CMakeCache.txt
 
-          cmake -GNinja \${matrix_cmake_system_name} ${matrix_cmake_system_processor} ${matrix_lldb_enable_libxml2} \
+          cmake -GNinja ${matrix_cmake_system_name} ${matrix_cmake_system_processor} ${matrix_lldb_enable_libxml2} \
 	  --toolchain ~/src/llvm-build/cmake/toolchains/Darwin-arm64.cmake \
           -B ${github_workspace}/BinaryCache/1 \
           -C ${github_workspace}/SourceCache/llvm-build/cmake/caches/LLVM.cmake \

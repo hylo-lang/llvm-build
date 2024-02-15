@@ -117,9 +117,7 @@ jobs:
           - c_compiler: clang
           - cxx_compiler: clang++
           - toolset_suffix:
-          - cmake_system_name:
-          - cmake_system_processor:
-          - lldb_enable_libxml2:
+          - lldb_enable_libxml2_option:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
           - llvm_enable_projects: 'clang;lld'
@@ -127,6 +125,8 @@ jobs:
           - package_command: tar cjf
           - package_suffix: .tar.bz2
           - compile_cache: sccache
+          - llvm_target_arch_option:
+          - cmake_system_processor_option:
 
           # Overrides
           - os: windows-latest
@@ -141,25 +141,15 @@ jobs:
             package_command: 7z a -t7z
             package_suffix: .7z
 
-          - arch: arm64
+          - os: macos-latest
 
-            cmake_system_processor: -D CMAKE_SYSTEM_PROCESSOR=ARM64
-            lldb_enable_libxml2: -D LLDB_ENABLE_LIBXML2=NO
-
-          - arch: arm64
-            os: windows-latest
-
-            cmake_system_name: -D CMAKE_SYSTEM_NAME=Windows
+            compile_cache: ccache
 
           - arch: arm64
-            os: macos-latest
 
-            cmake_system_name: -D CMAKE_SYSTEM_NAME=Darwin
-
-          - arch: arm64
-            os: ubuntu-latest
-
-            cmake_system_name: -D CMAKE_SYSTEM_NAME=Linux
+            lldb_enable_libxml2_option: -D LLDB_ENABLE_LIBXML2=NO
+            llvm_target_arch_option: -D LLVM_TARGET_ARCH=arm64
+            cmake_system_processor_option: -D CMAKE_SYSTEM_PROCESSOR=arm64
 
           # Extensions
           - arch: amd64
@@ -172,19 +162,18 @@ jobs:
 
           - os: windows-latest
 
+            cmake_system_name: Windows
             triple_suffix: unknown-windows-msvc17
 
           - os: ubuntu-latest
 
+            cmake_system_name: Linux
             triple_suffix: unknown-linux-gnu
 
           - os: macos-latest
 
+            cmake_system_name: Darwin
             triple_suffix: apple-darwin23.3.0
-
-
-          - compile_cache: ccache
-            os: macos-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -193,6 +182,10 @@ jobs:
       PYTHON_VERSION: 3.12.2
       TARGET_TRIPLE: ${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}
       PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-release
+      llvm_host_triple_option: ${{ matrix.arch != 'amd64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
+      cmake_c_compiler_target_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_C_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
+      cmake_cxx_compiler_target_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
+      cmake_system_name_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
 
     steps:
       - uses: actions/download-artifact@v4
@@ -271,17 +264,21 @@ jobs:
       - name: Configure LLVM
         run: >-
 
-          cmake -GNinja ${{ matrix.cmake_system_name }} ${{ matrix.cmake_system_processor }} ${{ matrix.lldb_enable_libxml2 }}
+          cmake -GNinja
+          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
           -B ${{ github.workspace }}/BinaryCache/1
           -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
           -D CMAKE_BUILD_TYPE=Release
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -D CMAKE_C_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
+          ${{ env.cmake_c_compiler_target_option }}
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
           -D CMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
+          ${{ env.cmake_cxx_compiler_target_option }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
-          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          ${{ env.cmake_system_name_option }}
+          ${{ matrix.cmake_system_processor_option }}
           -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
           -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
           -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
@@ -292,11 +289,14 @@ jobs:
           -D CLANG_VENDOR=hylo-lang.org
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt
           -D PACKAGE_VENDOR=hylo-lang.org
+          -D LLVM_APPEND_VC_REV=NO
           -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
           -D LLVM_ENABLE_PROJECTS="${{ matrix.llvm_enable_projects }}"
+          ${{ env.llvm_host_triple_option }}
           -D LLVM_PARALLEL_LINK_JOBS=2
-          -D LLVM_APPEND_VC_REV=NO
+          ${{ matrix.llvm_target_arch_option }}
           -D LLVM_VERSION_SUFFIX=""
+          ${{ matrix.lldb_enable_libxml2_option }}
           -D LLDB_PYTHON_EXE_RELATIVE_PATH=python${{ matrix.executable_suffix }}
           -D LLDB_PYTHON_EXT_SUFFIX=.pyd
           -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
