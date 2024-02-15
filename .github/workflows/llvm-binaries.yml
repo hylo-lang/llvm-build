@@ -19,98 +19,7 @@ jobs:
 
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-
-        include:
-          # Default valuies
-          - c_compiler: clang
-          - cxx_compiler: clang++
-          - executable_suffix:
-
-          # Overrides
-          - os: windows-latest
-            c_compiler: cl
-            cxx_compiler: cl
-            executable_suffix: .exe
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: llvm/llvm-project
-          ref: llvmorg-${{ inputs.llvm_version }}
-          path: ${{ github.workspace }}/SourceCache/llvm-project
-          show-progress: false
-
-      - uses: compnerd/gha-setup-vsdevenv@main
-
-      - uses: seanmiddleditch/gha-setup-ninja@master
-        with:
-          version: 1.11.1
-
-      - name: Setup sccache
-        uses: compnerd/ccache-action@sccache-0.7.4
-        with:
-          max-size: 100M
-          key: sccache-${{ matrix.os }}-build_tools
-          variant: sccache
-
-      - name: Configure Tools
-        run: >-
-
-          cmake -B ${{ github.workspace }}/BinaryCache/0
-          -D CMAKE_BUILD_TYPE=Release
-          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
-          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_MT=mt
-          -G Ninja
-          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-          -D LLVM_ENABLE_ASSERTIONS=NO
-          -D LLVM_ENABLE_LIBEDIT=NO
-          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
-          -D LLDB_ENABLE_PYTHON=NO
-          -D LLDB_INCLUDE_TESTS=NO
-
-      - name: Build llvm-tblgen
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target llvm-tblgen
-      - name: Build clang-tblgen
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target clang-tblgen
-      - name: Build lldb-tblgen
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target lldb-tblgen
-      - name: Build llvm-config
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target llvm-config
-      - name: Build clang-pseudo-gen
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target clang-pseudo-gen
-      - name: Build clang-tidy-confusable-chars-gen
-        run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target clang-tidy-confusable-chars-gen
-
-      - name: Archive tools
-        run: >-
-          tar cf tools.tar
-          bin/llvm-tblgen${{ matrix.executable_suffix }}
-          bin/clang-tblgen${{ matrix.executable_suffix }}
-          bin/lldb-tblgen${{ matrix.executable_suffix }}
-          bin/llvm-config${{ matrix.executable_suffix }}
-          bin/clang-pseudo-gen${{ matrix.executable_suffix }}
-          bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
-        working-directory: ${{ github.workspace }}/BinaryCache/0
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0/tools.tar
-
-  distribution:
-    needs: [build_tools]
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        arch: [amd64, arm64]
+        arch: [x86_64, arm64]
 
         include:
           # Default values
@@ -118,6 +27,7 @@ jobs:
           - cxx_compiler: clang++
           - toolset_suffix:
           - lldb_enable_libxml2_option:
+          - llvm_enable_zstd_option:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
           - llvm_enable_projects: 'clang;lld'
@@ -145,6 +55,7 @@ jobs:
           - os: macos-latest
 
             compile_cache: ccache
+            llvm_enable_zstd_option: -D LLVM_ENABLE_ZSTD=NO
 
           - arch: arm64
 
@@ -158,14 +69,6 @@ jobs:
               -D CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY
 
           # Extensions
-          - arch: amd64
-
-            triple_cpu: x86_64
-
-          - arch: arm64
-
-            triple_cpu: arm64
-
           - os: windows-latest
 
             cmake_system_name: Windows
@@ -186,23 +89,23 @@ jobs:
     env:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
       PYTHON_VERSION: 3.12.2
-      TARGET_TRIPLE: ${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}
-      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-release
-      llvm_host_triple_option: ${{ matrix.arch != 'amd64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      cmake_c_compiler_target_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_C_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      cmake_cxx_compiler_target_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      cmake_system_name_option: ${{ matrix.arch != 'amd64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
+      TARGET_TRIPLE: ${{ matrix.arch }}-${{ matrix.triple_suffix }}
+      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-${{ matrix.triple_suffix }}-release
+      llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
+      cmake_c_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_C_COMPILER_TARGET={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
+      cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
+      cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
+      maybe_cross_tools_option: >-
+
+        -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
+        -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
+        -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
+        -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
+        -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
+        -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
+
 
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0
-
-      - name: Extract tools
-        run: tar xf tools.tar
-        working-directory: ${{ github.workspace }}/BinaryCache/0
-
       - uses: actions/checkout@v4
         with:
           repository: llvm/llvm-project
@@ -214,6 +117,50 @@ jobs:
         with:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
+
+      - uses: compnerd/gha-setup-vsdevenv@main
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        with:
+          version: 1.11.1
+
+      - name: Setup ${{ matrix.compile_cache }}
+        uses: compnerd/ccache-action@sccache-0.7.4
+        with:
+          max-size: 500M
+          key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}
+          variant: ${{ matrix.compile_cache }}
+
+      - name: Configure Tools
+        if: ${{ matrix.arch != 'x86_64' }}
+        run: >-
+
+          cmake -B ${{ github.workspace }}/BinaryCache/0
+          -D CMAKE_BUILD_TYPE=Release
+          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_MT=mt
+          -G Ninja
+          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          -D LLVM_ENABLE_ASSERTIONS=NO
+          -D LLVM_ENABLE_LIBEDIT=NO
+          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
+          -D LLDB_ENABLE_PYTHON=NO
+          -D LLDB_INCLUDE_TESTS=NO
+
+      - name: Build tools
+        if: ${{ matrix.arch != 'x86_64' }}
+        run: >-
+
+          cmake --build ${{ github.workspace }}/BinaryCache/0
+          --target llvm-tblgen
+          --target clang-tblgen
+          --target lldb-tblgen
+          --target llvm-config
+          --target clang-pseudo-gen
+          --target clang-tidy-confusable-chars-gen
 
       - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
         uses: actions/setup-python@v5
@@ -231,21 +178,10 @@ jobs:
           nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
           echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
 
-      - name: Setup ${{ matrix.compile_cache }}
-        uses: compnerd/ccache-action@sccache-0.7.4
-        with:
-          max-size: 500M
-          key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}-distribution
-          variant: ${{ matrix.compile_cache }}
-
-      - uses: seanmiddleditch/gha-setup-ninja@master
-        with:
-          version: 1.11.1
-
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
         with:
-          host_arch: amd64
+          host_arch: x86_64
           toolset_version: 14.37.32822
           components: 'Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64;Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64'
           arch: ${{ matrix.arch }}
@@ -286,12 +222,7 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
-          -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
-          -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
-          -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
-          -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
-          -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
-          -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
+          ${{ matrix.arch != 'x86_64' && env.maybe_cross_tools_option || '' }}
           -D LLVM_USE_HOST_TOOLS=NO
           -D CLANG_VENDOR=hylo-lang.org
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt
@@ -299,6 +230,7 @@ jobs:
           -D LLVM_APPEND_VC_REV=NO
           -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
           -D LLVM_ENABLE_PROJECTS="${{ matrix.llvm_enable_projects }}"
+          ${{ matrix.llvm_enable_zstd_option }}
           ${{ env.llvm_host_triple_option }}
           -D LLVM_PARALLEL_LINK_JOBS=2
           ${{ matrix.llvm_target_arch_option }}
