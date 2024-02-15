@@ -194,7 +194,7 @@ jobs:
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
         with:
-          host_arch: x86_64
+          host_arch: amd64
           toolset_version: 14.37.32822
           components: 'Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64;Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64'
           arch: ${{ matrix.arch }}
