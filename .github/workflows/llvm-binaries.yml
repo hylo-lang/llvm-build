@@ -264,11 +264,12 @@ jobs:
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target install
 
       - name: Package LLVM
+        working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
 
           ${{ matrix.package_command }}
-          ${{ env.PACKAGE_NAME }}.${{ matrix.package_suffix }}
-          ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
+          ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.${{ matrix.package_suffix }}
+          ${{ env.PACKAGE_NAME }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
