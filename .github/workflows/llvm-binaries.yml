@@ -161,7 +161,8 @@ jobs:
       # setup-vsdevenv doesn't properly overwrite an earlier setup.
       - name: save Windows environment
         if: ${{ matrix.os == 'windows-latest' }}
-        run: Get-ChildItem env: | Export-CliXml ./pre-vsdevenv-environment.clixml
+        run: |
+          Get-ChildItem env: | Export-CliXml ./pre-vsdevenv-environment.clixml
 
       - uses: compnerd/gha-setup-vsdevenv@main
 
@@ -199,7 +200,8 @@ jobs:
       # setup-vsdevenv doesn't properly overwrite an earlier setup.
       - name: Restore Windows environment
         if: ${{ matrix.os == 'windows-latest' }}
-        run: Import-CliXml ./pre-vsdevenv-environment.clixml | % { Set-Item "env:$($_.Name)" $_.Value }
+        run: |
+          Import-CliXml ./pre-vsdevenv-environment.clixml | % { Set-Item "env:$($_.Name)" $_.Value }
 
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
