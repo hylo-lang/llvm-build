@@ -55,7 +55,7 @@ jobs:
 
           - os: macos-latest
 
-            compile_cache: ccache
+            # compile_cache: ccache
             llvm_enable_zstd_option: -D LLVM_ENABLE_ZSTD=NO
 
           - arch: x86_64
@@ -151,9 +151,9 @@ jobs:
           cmake -B ${{ github.workspace }}/BinaryCache/0
           -D CMAKE_BUILD_TYPE=Release
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_C_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           -D CMAKE_MT=mt
           -G Ninja
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
