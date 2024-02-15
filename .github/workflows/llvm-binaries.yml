@@ -40,6 +40,7 @@ jobs:
           - cmake_find_root_path_option:
           - triple_cpu:
           - host_tools_setup:
+          - host_tools_shell: bash
 
           # Overrides
           - os: windows-latest
@@ -53,7 +54,8 @@ jobs:
             static_lib_suffix: .lib
             package_command: 7z a -t7z
             package_suffix: .7z
-            host_tools_setup: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"'
+            host_tools_setup: 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"'
+            host_tools_shell: cmd
 
           - os: macos-latest
 
@@ -146,6 +148,7 @@ jobs:
 
       - name: Configure Tools
         if: ${{ matrix.arch != 'x86_64' }}
+        shell: ${{ matrix.host_tools_shell }}
         run: >-
           ${{ matrix.host_tools_setup }}
 
@@ -166,6 +169,7 @@ jobs:
 
       - name: Build tools
         if: ${{ matrix.arch != 'x86_64' }}
+        shell: ${{ matrix.host_tools_shell }}
         run: >-
           ${{ matrix.host_tools_setup }}
 
