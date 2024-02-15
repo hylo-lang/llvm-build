@@ -249,7 +249,7 @@ jobs:
           host_arch: amd64
           toolset_version: 14.37.32822
           components: 'Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64;Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64'
-          arch: ${{ matrix.arch }}
+          arch: ${{ matrix.arch == 'arm64' && 'arm64' || 'amd64' }}
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
