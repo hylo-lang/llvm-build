@@ -140,7 +140,7 @@ jobs:
       - name: Setup ${{ matrix.compile_cache }}
         uses: compnerd/ccache-action@sccache-0.7.4
         with:
-          max-size: 500M
+          max-size: 1000M
           key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}
           variant: ${{ matrix.compile_cache }}
 
