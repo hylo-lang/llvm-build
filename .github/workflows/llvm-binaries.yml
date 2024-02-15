@@ -39,6 +39,7 @@ jobs:
           - cmake_system_processor_option:
           - cmake_find_root_path_option:
           - triple_cpu:
+          - host_tools_setup:
 
           # Overrides
           - os: windows-latest
@@ -52,6 +53,7 @@ jobs:
             static_lib_suffix: .lib
             package_command: 7z a -t7z
             package_suffix: .7z
+            host_tools_setup: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"'
 
           - os: macos-latest
 
@@ -145,6 +147,7 @@ jobs:
       - name: Configure Tools
         if: ${{ matrix.arch != 'x86_64' }}
         run: >-
+          ${{ matrix.host_tools_setup }}
 
           cmake -B ${{ github.workspace }}/BinaryCache/0
           -D CMAKE_BUILD_TYPE=Release
@@ -164,6 +167,7 @@ jobs:
       - name: Build tools
         if: ${{ matrix.arch != 'x86_64' }}
         run: >-
+          ${{ matrix.host_tools_setup }}
 
           cmake --build ${{ github.workspace }}/BinaryCache/0
           --target llvm-tblgen
