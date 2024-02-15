@@ -241,7 +241,6 @@ jobs:
           -D CLANG_VENDOR_UTI=org.hylo-lang.dt
           -D PACKAGE_VENDOR=hylo-lang.org
           -D LLVM_APPEND_VC_REV=NO
-          -D LLVM_DEFAULT_TARGET_TRIPLE=${{ env.TARGET_TRIPLE }}
           -D LLVM_ENABLE_PROJECTS="${{ matrix.llvm_enable_projects }}"
           ${{ matrix.llvm_enable_zstd_option }}
           ${{ env.llvm_host_triple_option }}
