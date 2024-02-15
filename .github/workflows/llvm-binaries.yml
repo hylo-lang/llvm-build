@@ -38,6 +38,7 @@ jobs:
           - llvm_target_arch_option:
           - cmake_system_processor_option:
           - cmake_find_root_path_option:
+          - triple_cpu:
 
           # Overrides
           - os: windows-latest
@@ -57,6 +58,10 @@ jobs:
             compile_cache: ccache
             llvm_enable_zstd_option: -D LLVM_ENABLE_ZSTD=NO
 
+          - arch: x86_64
+
+            triple_cpu: x86_64
+
           - arch: arm64
 
             lldb_enable_libxml2_option: -D LLDB_ENABLE_LIBXML2=NO
@@ -67,6 +72,15 @@ jobs:
               -D CMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY
               -D CMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
               -D CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY
+
+            triple_cpu: arm64
+
+          - arch: arm64
+            os: ubuntu-latest
+
+            triple_cpu: aarch64
+            c_compiler: gcc
+            cxx_compiler: g++
 
           # Extensions
           - os: windows-latest
@@ -89,11 +103,11 @@ jobs:
     env:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
       PYTHON_VERSION: 3.12.2
-      TARGET_TRIPLE: ${{ matrix.arch }}-${{ matrix.triple_suffix }}
-      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.arch }}-${{ matrix.triple_suffix }}-release
-      llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
-      cmake_c_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_C_COMPILER_TARGET={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
-      cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.arch, matrix.triple_suffix) || '' }}
+      TARGET_TRIPLE: ${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}
+      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-release
+      llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
+      cmake_c_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_C_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
+      cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
       cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
       maybe_cross_tools_option: >-
 
