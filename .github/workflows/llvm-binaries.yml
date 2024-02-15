@@ -131,6 +131,8 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
+      - uses: compnerd/gha-setup-vsdevenv@main
+
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
           version: 1.11.1
@@ -141,30 +143,6 @@ jobs:
           max-size: 1000M
           key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}
           variant: ${{ matrix.compile_cache }}
-
-      - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
-        uses: actions/setup-python@v5
-        id: python
-        with:
-          python-version: '${{ env.PYTHON_VERSION }}'
-
-      - name: Export Host Python Location
-        run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
-
-      # TODO(lxbndr) use actions/cache to improve this step timings
-      - name: Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
-        run: |
-          nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
-          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
-
-      # setup-vsdevenv doesn't properly overwrite an earlier setup.
-      - name: save Windows environment
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: |
-          Get-ChildItem env: | Export-CliXml ./pre-vsdevenv-environment.clixml
-
-      - uses: compnerd/gha-setup-vsdevenv@main
 
       - name: Configure Tools
         if: ${{ matrix.arch != 'x86_64' }}
@@ -197,11 +175,21 @@ jobs:
           --target clang-pseudo-gen
           --target clang-tidy-confusable-chars-gen
 
-      # setup-vsdevenv doesn't properly overwrite an earlier setup.
-      - name: Restore Windows environment
-        if: ${{ matrix.os == 'windows-latest' }}
+      - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
+        uses: actions/setup-python@v5
+        id: python
+        with:
+          python-version: '${{ env.PYTHON_VERSION }}'
+
+      - name: Export Host Python Location
+        run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
+
+      # TODO(lxbndr) use actions/cache to improve this step timings
+      - name: Install Python ${{ env.PYTHON_VERSION }} (arm64)
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
         run: |
-          Import-CliXml ./pre-vsdevenv-environment.clixml | % { Set-Item "env:$($_.Name)" $_.Value }
+          nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
+          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
 
       - uses: compnerd/gha-setup-vsdevenv@main
         if: matrix.os == 'windows-latest'
