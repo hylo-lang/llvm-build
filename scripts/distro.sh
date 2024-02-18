@@ -16,7 +16,7 @@ matrix_cmake_system_processor="-D CMAKE_SYSTEM_PROCESSOR=ARM64"
 matrix_lldb_enable_libxml2=
 matrix_into_environment='>> $GITHUB_ENV'
 matrix_executable_suffix=
-matrix_llvm_enable_projects='clang;lld'
+matrix_llvm_enable_projects='lld'
 matrix_arch=arm64
 matrix_triple_cpu=arm64
 matrix_triple_suffix=apple-darwin23.3.0

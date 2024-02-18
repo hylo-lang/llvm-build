@@ -28,19 +28,13 @@ rm -f ${github_workspace}/BinaryCache/0/CMakeCache.txt
           -S ${github_workspace}/SourceCache/llvm-project/llvm \
           -D LLVM_ENABLE_ASSERTIONS=NO \
           -D LLVM_ENABLE_LIBEDIT=NO \
-          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb" \
+          -D LLVM_ENABLE_PROJECTS="" \
           -D LLDB_ENABLE_PYTHON=NO \
           -D LLDB_INCLUDE_TESTS=NO
 
 # Build llvm-tblgen
         cmake --build ${github_workspace}/BinaryCache/0 --target llvm-tblgen
-# Build clang-tblgen
-        cmake --build ${github_workspace}/BinaryCache/0 --target clang-tblgen
 # Build lldb-tblgen
         cmake --build ${github_workspace}/BinaryCache/0 --target lldb-tblgen
 # Build llvm-config
         cmake --build ${github_workspace}/BinaryCache/0 --target llvm-config
-# Build clang-pseudo-gen
-        cmake --build ${github_workspace}/BinaryCache/0 --target clang-pseudo-gen
-# Build clang-tidy-confusable-chars-gen
-        cmake --build ${github_workspace}/BinaryCache/0 --target clang-tidy-confusable-chars-gen

@@ -70,7 +70,7 @@ jobs:
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
           -D LLVM_ENABLE_ASSERTIONS=NO
           -D LLVM_ENABLE_LIBEDIT=NO
-          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb"
+          -D LLVM_ENABLE_PROJECTS=""
           -D LLDB_ENABLE_PYTHON=NO
           -D LLDB_INCLUDE_TESTS=NO
 
@@ -80,11 +80,8 @@ jobs:
 
           cmake --build ${{ github.workspace }}/BinaryCache/0
           --target llvm-tblgen
-          --target clang-tblgen
           --target lldb-tblgen
           --target llvm-config
-          --target clang-pseudo-gen
-          --target clang-tidy-confusable-chars-gen
 
       - name: Archive tools
         run: tar cf tools.tar bin
@@ -115,7 +112,6 @@ jobs:
           - llvm_enable_zstd_option:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
-          - llvm_enable_projects: 'clang;lld'
           - static_lib_suffix: .a
           - package_command: tar cjf
           - package_suffix: .tar.bz2
@@ -133,7 +129,6 @@ jobs:
             cxx_compiler: cl
             toolset_suffix: -msvc17
             executable_suffix: .exe
-            llvm_enable_projects: 'clang;lld;lldb'
             static_lib_suffix: .lib
             package_command: 7z a -t7z
             package_suffix: .7z
@@ -288,18 +283,13 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
-          -D CLANG_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tblgen${{ matrix.executable_suffix }}
-          -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${{ github.workspace }}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${{ matrix.executable_suffix }}
-          -D LLDB_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/lldb-tblgen${{ matrix.executable_suffix }}
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
           -D LLVM_USE_HOST_TOOLS=NO
-          -D CLANG_VENDOR=hylo-lang.org
-          -D CLANG_VENDOR_UTI=org.hylo-lang.dt
           -D PACKAGE_VENDOR=hylo-lang.org
           -D LLVM_APPEND_VC_REV=NO
-          -D LLVM_ENABLE_PROJECTS="${{ matrix.llvm_enable_projects }}"
+          -D LLVM_ENABLE_PROJECTS="lld"
           ${{ matrix.llvm_enable_zstd_option }}
           ${{ env.llvm_host_triple_option }}
           -D LLVM_PARALLEL_LINK_JOBS=2

@@ -78,19 +78,6 @@ set(LLVM_TOOLCHAIN_TOOLS
       strings
     CACHE STRING "")
 
-set(CLANG_TOOLS
-    clang
-    CACHE STRING "")
-
 set(LLD_TOOLS
       lld
-    CACHE STRING "")
-
-set(LLDB_TOOLS
-      liblldb
-      lldb
-      lldb-argdumper
-      lldb-python-scripts
-      lldb-server
-      lldb-vscode
     CACHE STRING "")

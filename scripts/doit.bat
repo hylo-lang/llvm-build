@@ -21,22 +21,15 @@ set SCCACHE_DIR=s:\sccache
                 -S %LLVM_SOURCE%/llvm ^
                 -D LLVM_ENABLE_ASSERTIONS=NO ^
                 -D LLVM_ENABLE_LIBEDIT=NO ^
-                -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb" ^
                 -D LLDB_ENABLE_PYTHON=NO ^
                 -D LLDB_INCLUDE_TESTS=NO
 if %errorlevel% neq 0 exit /b %errorlevel%
 
         cmake --build %WORKSPACE%/BinaryCache/0 --target llvm-tblgen
 if %errorlevel% neq 0 exit /b %errorlevel%
-        cmake --build %WORKSPACE%/BinaryCache/0 --target clang-tblgen
-if %errorlevel% neq 0 exit /b %errorlevel%
         cmake --build %WORKSPACE%/BinaryCache/0 --target lldb-tblgen
 if %errorlevel% neq 0 exit /b %errorlevel%
         cmake --build %WORKSPACE%/BinaryCache/0 --target llvm-config
-if %errorlevel% neq 0 exit /b %errorlevel%
-        cmake --build %WORKSPACE%/BinaryCache/0 --target clang-pseudo-gen
-if %errorlevel% neq 0 exit /b %errorlevel%
-        cmake --build %WORKSPACE%/BinaryCache/0 --target clang-tidy-confusable-chars-gen
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 set ARCH=arm64
@@ -71,15 +64,11 @@ set /p CLANG_LOCATION=<%WORKSPACE%\clang-cl-dir
                 %CMAKE_SYSTEM_PROCESSOR% ^
                 -G Ninja ^
                 -S %LLVM_SOURCE%/llvm ^
-                -D CLANG_TABLEGEN=%WORKSPACE%/BinaryCache/0/bin/clang-tblgen.exe ^
-                -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=%WORKSPACE%/BinaryCache/0/bin/clang-tidy-confusable-chars-gen.exe ^
                 -D LLDB_TABLEGEN=%WORKSPACE%/BinaryCache/0/bin/lldb-tblgen.exe ^
                 -D LLVM_CONFIG_PATH=%WORKSPACE%/BinaryCache/0/bin/llvm-config.exe ^
                 -D LLVM_NATIVE_TOOL_DIR=%WORKSPACE%/BinaryCache/0/bin ^
                 -D LLVM_TABLEGEN=%WORKSPACE%/BinaryCache/0/bin/llvm-tblgen.exe ^
                 -D LLVM_USE_HOST_TOOLS=NO ^
-                -D CLANG_VENDOR=compnerd.org ^
-                -D CLANG_VENDOR_UTI=org.compnerd.dt ^
                 -D PACKAGE_VENDOR=compnerd.org ^
                 -D LLVM_PARALLEL_LINK_JOBS=2 ^
                 -D LLVM_APPEND_VC_REV=NO ^
