@@ -71,8 +71,6 @@ jobs:
           -D LLVM_ENABLE_ASSERTIONS=NO
           -D LLVM_ENABLE_LIBEDIT=NO
           -D LLVM_ENABLE_PROJECTS=""
-          -D LLDB_ENABLE_PYTHON=NO
-          -D LLDB_INCLUDE_TESTS=NO
 
 
       - name: Build tools
@@ -80,7 +78,6 @@ jobs:
 
           cmake --build ${{ github.workspace }}/BinaryCache/0
           --target llvm-tblgen
-          --target lldb-tblgen
           --target llvm-config
 
       - name: Archive tools
@@ -108,7 +105,6 @@ jobs:
           - c_compiler: clang
           - cxx_compiler: clang++
           - toolset_suffix:
-          - lldb_enable_libxml2_option:
           - llvm_enable_zstd_option:
           - into_environment: '>> $GITHUB_ENV'
           - executable_suffix:
@@ -144,7 +140,6 @@ jobs:
 
           - arch: arm64
 
-            lldb_enable_libxml2_option: -D LLDB_ENABLE_LIBXML2=NO
             llvm_target_arch_option: -D LLVM_TARGET_ARCH=arm64
             cmake_system_processor_option: -D CMAKE_SYSTEM_PROCESSOR=arm64
             cmake_find_root_path_option: >-
@@ -295,10 +290,6 @@ jobs:
           -D LLVM_PARALLEL_LINK_JOBS=2
           ${{ matrix.llvm_target_arch_option }}
           -D LLVM_VERSION_SUFFIX=""
-          ${{ matrix.lldb_enable_libxml2_option }}
-          -D LLDB_PYTHON_EXE_RELATIVE_PATH=python${{ matrix.executable_suffix }}
-          -D LLDB_PYTHON_EXT_SUFFIX=.pyd
-          -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages
           -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
           -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}/include
           -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}/libs/python312${{ matrix.static_lib_suffix }}
