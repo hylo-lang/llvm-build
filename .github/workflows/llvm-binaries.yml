@@ -218,10 +218,6 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
-      - name: Patch LLVM
-        run: git apply ${{ github.workspace }}/SourceCache/llvm-build/AddLLVM.cmake.patch
-        working-directory: ${{ github.workspace }}/SourceCache/llvm-project
-
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
           version: 1.11.1
