@@ -104,6 +104,7 @@ jobs:
           # Default values
           - c_compiler: clang
           - cmake_find_root_path_option:
+          - cmake_generator: Ninja
           - cmake_system_processor_option:
           - compile_cache: sccache
           - cxx_compiler: clang++
@@ -155,6 +156,17 @@ jobs:
             c_compiler: gcc
             cxx_compiler: g++
             triple_cpu: aarch64
+
+          - os: windows-latest
+            arch: x86_64
+
+            cmake_generator: "Visual Studio 17 2022" -A x64
+
+          - os: windows-latest
+            arch: arm64
+
+            cmake_generator: "Visual Studio 17 2022" -A ARM64
+
 
           # Extensions
           - os: windows-latest
@@ -261,7 +273,7 @@ jobs:
       - name: Configure LLVM
         run: >-
 
-          cmake -GNinja
+          cmake -G ${{ matrix.cmake_generator }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
           -B ${{ github.workspace }}/BinaryCache/1
           -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
