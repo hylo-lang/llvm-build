@@ -1,10 +1,5 @@
-# https://github.com/mozilla/sccache?tab=readme-ov-file#usage
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
-cmake_policy(SET CMP0141 NEW)
-
 # NOTE(compnerd) always enable assertions, the toolchain will not provide enough
 # context to resolve issues otherwise and may silently generate invalid output.
-
 set(LLVM_ENABLE_ASSERTIONS YES CACHE BOOL "")
 
 set(ENABLE_X86_RELAX_RELOCATIONS YES CACHE BOOL "")

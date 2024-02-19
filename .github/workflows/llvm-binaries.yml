@@ -216,6 +216,10 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
+      - name: Patch LLVM
+        run: git apply ${{ github.workspace }}/SourceCache/llvm-build/llvm.patch
+        working-directory: ${{ github.workspace }}/SourceCache/llvm-project
+
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
           version: 1.11.1
@@ -282,6 +286,7 @@ jobs:
           -D CMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           ${{ env.cmake_cxx_compiler_target_option }}
           ${{ matrix.cmake_find_root_path_option }}
+          -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
