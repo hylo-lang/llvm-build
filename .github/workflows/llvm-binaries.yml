@@ -275,10 +275,10 @@ jobs:
         run: >-
 
           cmake -GNinja
+          -D CMAKE_BUILD_TYPE=${{ matrix.configuration }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
           -B ${{ github.workspace }}/BinaryCache/1
           -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
-          -D CMAKE_BUILD_TYPE=${{ matrix.configuration }}
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -D CMAKE_C_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
           ${{ env.cmake_c_compiler_target_option }}
