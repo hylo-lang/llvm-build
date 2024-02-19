@@ -186,6 +186,15 @@ jobs:
 
 
     steps:
+      # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+      - name: Free up disk space for debug builds
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - uses: actions/download-artifact@v4
         with:
           name: build-tools-${{ matrix.os }}
