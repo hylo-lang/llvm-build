@@ -38,49 +38,45 @@ set(LLDB_INCLUDE_TESTS NO CACHE BOOL "Generate build targets for the LLDB unit t
 
 set(LLVM_INSTALL_BINUTILS_SYMLINKS YES CACHE BOOL "")
 set(LLVM_INSTALL_TOOLCHAIN_ONLY NO CACHE BOOL "")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(LLVM_TOOLCHAIN_TOOLS addr2line CACHE STRING "")
-else()
-  set(LLVM_TOOLCHAIN_TOOLS
-    addr2line
-    ar
-    c++filt
-    dsymutil
-    dwp
-    # lipo
-    llvm-ar
-    llvm-cov
-    llvm-cvtres
-    llvm-cxxfilt
-    llvm-dlltool
-    llvm-dwarfdump
-    llvm-dwp
-    llvm-lib
-    llvm-lipo
-    llvm-mt
-    llvm-nm
-    llvm-objcopy
-    llvm-objdump
-    llvm-pdbutil
-    llvm-profdata
-    llvm-ranlib
-    llvm-rc
-    llvm-readelf
-    llvm-readobj
-    llvm-size
-    llvm-strings
-    llvm-strip
-    llvm-symbolizer
-    llvm-undname
-    nm
-    objcopy
-    objdump
-    ranlib
-    readelf
-    size
-    strings
-    CACHE STRING "")
-endif()
+set(LLVM_TOOLCHAIN_TOOLS
+  addr2line
+  ar
+  c++filt
+  dsymutil
+  dwp
+  # lipo
+  llvm-ar
+  llvm-cov
+  llvm-cvtres
+  llvm-cxxfilt
+  llvm-dlltool
+  llvm-dwarfdump
+  llvm-dwp
+  llvm-lib
+  llvm-lipo
+  llvm-mt
+  llvm-nm
+  llvm-objcopy
+  llvm-objdump
+  llvm-pdbutil
+  llvm-profdata
+  llvm-ranlib
+  llvm-rc
+  llvm-readelf
+  llvm-readobj
+  llvm-size
+  llvm-strings
+  llvm-strip
+  llvm-symbolizer
+  llvm-undname
+  nm
+  objcopy
+  objdump
+  ranlib
+  readelf
+  size
+  strings
+  CACHE STRING "")
 
 set(LLD_TOOLS
       lld

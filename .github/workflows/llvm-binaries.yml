@@ -116,8 +116,15 @@ jobs:
           - static_lib_suffix: .a
           - toolset_suffix:
           - triple_cpu:
+          - install_target: install-distribution-stripped
+          - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
 
           # Overrides
+          - configuration: Debug
+
+            install_target: install-distribution
+            llvm_distribution_tools: lld;llvm-config
+
           - os: windows-latest
 
             c_compiler: cl
@@ -291,6 +298,7 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
+          -D LLVM_DISTRIBUTION_COMPONENTS "llvm-libraries;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
@@ -309,10 +317,10 @@ jobs:
           -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
 
       - name: Install LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target install
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
 
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
