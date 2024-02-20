@@ -13,7 +13,6 @@ matrix_executable_suffix=
 matrix_toolset_suffix=
 matrix_cmake_system_name="-D CMAKE_SYSTEM_NAME=Darwin"
 matrix_cmake_system_processor="-D CMAKE_SYSTEM_PROCESSOR=ARM64"
-matrix_lldb_enable_libxml2=
 matrix_into_environment='>> $GITHUB_ENV'
 matrix_executable_suffix=
 matrix_llvm_enable_projects='lld'
@@ -29,15 +28,8 @@ matrix_llvm_target_arch=ARM64
 export SCCACHE_DIRECT=yes
 github_workspace=/tmp/llvm-workspace
 
-      # Must be a full version string from https://www.nuget.org/packages/pythonarm64
-export PYTHON_VERSION=$(python3 --version)
 export TARGET_TRIPLE=${matrix_triple_cpu}-${matrix_triple_suffix}
 export LLVM_CONFIG=llvm-${matrix_triple_cpu}-${matrix_triple_suffix}-release
-
-# Export Host Python Location
-export pythonLocation="$(which python3)/../.."
-steps_python_outputs_python_path="$(which python3)"
-export TARGET_PYTHON_LOCATION=${pythonLocation}
 
 # Setup sccache
 export SCCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
@@ -46,7 +38,7 @@ export CCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
 # Configure LLVM
 #rm -f ${github_workspace}/BinaryCache/1/CMakeCache.txt
 
-          cmake -GNinja ${matrix_cmake_system_name} ${matrix_cmake_system_processor} ${matrix_lldb_enable_libxml2} \
+          cmake -GNinja ${matrix_cmake_system_name} ${matrix_cmake_system_processor} \
 	  --toolchain ~/src/llvm-build/cmake/toolchains/Darwin-arm64.cmake \
           -B ${github_workspace}/BinaryCache/1 \
           -C ${github_workspace}/SourceCache/llvm-build/cmake/caches/LLVM.cmake \
@@ -58,7 +50,6 @@ export CCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
           -S ${github_workspace}/SourceCache/llvm-project/llvm \
           -D CLANG_TABLEGEN=${github_workspace}/BinaryCache/0/bin/clang-tblgen${matrix_executable_suffix} \
           -D CLANG_TIDY_CONFUSABLE_CHARS_GEN=${github_workspace}/BinaryCache/0/bin/clang-tidy-confusable-chars-gen${matrix_executable_suffix} \
-          -D LLDB_TABLEGEN=${github_workspace}/BinaryCache/0/bin/lldb-tblgen${matrix_executable_suffix} \
           -D LLVM_CONFIG_PATH=${github_workspace}/BinaryCache/0/bin/llvm-config${matrix_executable_suffix} \
           -D LLVM_NATIVE_TOOL_DIR=${github_workspace}/BinaryCache/0/bin \
           -D LLVM_TABLEGEN=${github_workspace}/BinaryCache/0/bin/llvm-tblgen${matrix_executable_suffix} \
@@ -73,14 +64,7 @@ export CCACHE_DIR=/tmp/sccache-${matrix_os}-${matrix_arch}-distribution
           -D LLVM_ENABLE_PROJECTS="${matrix_llvm_enable_projects}" \
           -D LLVM_PARALLEL_LINK_JOBS=2 \
           -D LLVM_APPEND_VC_REV=NO \
-          -D LLVM_VERSION_SUFFIX="" \
-          -D LLDB_PYTHON_EXE_RELATIVE_PATH=python${matrix_executable_suffix} \
-          -D LLDB_PYTHON_EXT_SUFFIX=.pyd \
-          -D LLDB_PYTHON_RELATIVE_PATH=lib/site-packages \
-          -D Python3_EXECUTABLE=${steps_python_outputs_python_path} \
-          -D Python3_INCLUDE_DIR=${TARGET_PYTHON_LOCATION}/include \
-          -D Python3_LIBRARY=${TARGET_PYTHON_LOCATION}/libs/python312${matrix_static_lib_suffix} \
-          -D Python3_ROOT_DIR=${pythonLocation}
+          -D LLVM_VERSION_SUFFIX=""
 
 # Build LLVM
         cmake --build ${github_workspace}/BinaryCache/1

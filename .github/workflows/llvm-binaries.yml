@@ -186,9 +186,7 @@ jobs:
       cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
       cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
       llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      # Must be a full version string from https://www.nuget.org/packages/pythonarm64
       PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
-      PYTHON_VERSION: 3.12.2
 
 
     steps:
@@ -236,22 +234,6 @@ jobs:
           max-size: 1000M
           key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: ${{ matrix.compile_cache }}
-
-      - name: Install Python ${{ env.PYTHON_VERSION }} (Host)
-        uses: actions/setup-python@v5
-        id: python
-        with:
-          python-version: '${{ env.PYTHON_VERSION }}'
-
-      - name: Export Host Python Location
-        run: echo "TARGET_PYTHON_LOCATION=${{ env.pythonLocation }}" ${{ matrix.into_environment }}
-
-      # TODO(lxbndr) use actions/cache to improve this step timings
-      - name: Install Python ${{ env.PYTHON_VERSION }} (arm64)
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
-        run: |
-          nuget install pythonarm64 -Version ${{ env.PYTHON_VERSION }}
-          echo "TARGET_PYTHON_LOCATION=${{ github.workspace }}/pythonarm64.${{ env.PYTHON_VERSION }}/tools" ${{ matrix.into_environment }}
 
       - uses: compnerd/gha-setup-vsdevenv@main
         with:
@@ -310,10 +292,6 @@ jobs:
           -D LLVM_PARALLEL_LINK_JOBS=2
           ${{ matrix.llvm_target_arch_option }}
           -D LLVM_VERSION_SUFFIX=""
-          -D Python3_EXECUTABLE=${{ steps.python.outputs.python-path }}
-          -D Python3_INCLUDE_DIR=${{ env.TARGET_PYTHON_LOCATION }}/include
-          -D Python3_LIBRARY=${{ env.TARGET_PYTHON_LOCATION }}/libs/python312${{ matrix.static_lib_suffix }}
-          -D Python3_ROOT_DIR=${{ env.pythonLocation }}
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
