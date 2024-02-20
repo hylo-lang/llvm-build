@@ -13,7 +13,84 @@ env:
   SCCACHE_DIRECT: yes
 
 jobs:
+  build_tools:
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+        include:
+          # Default valuies
+          - c_compiler: clang
+          - cxx_compiler: clang++
+          - executable_suffix:
+
+          # Overrides
+          - os: windows-latest
+
+            c_compiler: cl
+            cxx_compiler: cl
+            executable_suffix: .exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: llvm/llvm-project
+          ref: llvmorg-${{ inputs.llvm_version }}
+          path: ${{ github.workspace }}/SourceCache/llvm-project
+          show-progress: false
+
+      - uses: compnerd/gha-setup-vsdevenv@main
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        with:
+          version: 1.11.1
+
+      - name: Setup sccache
+        uses: compnerd/ccache-action@sccache-0.7.4
+        with:
+          max-size: 100M
+          key: sccache-${{ matrix.os }}-build_tools
+          variant: sccache
+
+      - name: Configure Tools
+        run: >-
+
+          cmake -B ${{ github.workspace }}/BinaryCache/0
+          -D CMAKE_BUILD_TYPE=Release
+          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
+          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -D CMAKE_MT=mt
+          -G Ninja
+          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          -D LLVM_ENABLE_ASSERTIONS=NO
+          -D LLVM_ENABLE_LIBEDIT=NO
+          -D LLVM_ENABLE_PROJECTS=""
+
+
+      - name: Build tools
+        run: >-
+
+          cmake --build ${{ github.workspace }}/BinaryCache/0
+          --target llvm-tblgen
+          --target llvm-config
+
+      - name: Archive tools
+        run: tar cf tools.tar bin
+        working-directory: ${{ github.workspace }}/BinaryCache/0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-tools-${{ matrix.os }}
+          path: ${{ github.workspace }}/BinaryCache/0/tools.tar
+
   distribution:
+    needs: [build_tools]
 
     strategy:
       fail-fast: false
@@ -110,8 +187,7 @@ jobs:
       cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
       llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
       PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
-      llvm_config_path_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_CONFIG_PATH={0}/BinaryCache/0/bin/llvm-config{1}', github.workspace, matrix.executable_suffix) || '' }}
-      llvm_tablegen_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_TABLEGEN={0}/BinaryCache/0/bin/llvm-tblgen{1}', github.workspace, matrix.executable_suffix) || '' }}
+
 
     steps:
       # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
@@ -122,6 +198,15 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-tools-${{ matrix.os }}
+          path: ${{ github.workspace }}/BinaryCache/0
+
+      - name: Extract tools
+        run: tar xf tools.tar
+        working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - uses: actions/checkout@v4
         with:
@@ -149,42 +234,6 @@ jobs:
           max-size: 1000M
           key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: ${{ matrix.compile_cache }}
-
-      - name: Save environment
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: Copy-Item "$env:GITHUB_ENV" "PRE_VSDEVENV_ENVIRONMENT.txt"
-
-      - uses: compnerd/gha-setup-vsdevenv@main
-        if: ${{ matrix.arch != 'x86_64' }}
-
-      - name: Configure Tools
-        if: ${{ matrix.arch != 'x86_64' }}
-        run: >-
-
-          cmake -B ${{ github.workspace }}/BinaryCache/0
-          -D CMAKE_BUILD_TYPE=Release
-          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
-          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_MT=mt
-          -G Ninja
-          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-          -D LLVM_ENABLE_ASSERTIONS=NO
-          -D LLVM_ENABLE_LIBEDIT=NO
-          -D LLVM_ENABLE_PROJECTS=""
-
-      - name: Build tools
-        if: ${{ matrix.arch != 'x86_64' }}
-        run: >-
-
-          cmake --build ${{ github.workspace }}/BinaryCache/0
-          --target llvm-tblgen
-          --target llvm-config
-
-      - name: Restore environment
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: Copy-Item "PRE_VSDEVENV_ENVIRONMENT.txt" "$env:GITHUB_ENV" -force
 
       - uses: compnerd/gha-setup-vsdevenv@main
         with:
@@ -231,9 +280,9 @@ jobs:
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
           -D LLVM_DISTRIBUTION_COMPONENTS="llvm-libraries;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
-          ${{ env.llvm_config_path_option }}
+          -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
-          ${{ env.llvm_tablegen_option }}
+          -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
           -D LLVM_USE_HOST_TOOLS=NO
           -D PACKAGE_VENDOR=hylo-lang.org
           -D LLVM_APPEND_VC_REV=NO
