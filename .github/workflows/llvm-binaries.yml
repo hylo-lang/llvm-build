@@ -189,7 +189,6 @@ jobs:
       # Must be a full version string from https://www.nuget.org/packages/pythonarm64
       PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
       PYTHON_VERSION: 3.12.2
-      TARGET_TRIPLE: ${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}
 
 
     steps:
