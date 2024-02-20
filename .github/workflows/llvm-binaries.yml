@@ -248,8 +248,8 @@ jobs:
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
 
       - name: Reclaim disk space
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.configuration != 'Release' }}
-        run: find ${{ github.workspace }}/BinaryCache/1 -name '*.o' -print0 | xargs -0 rm
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
