@@ -298,7 +298,7 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="llvm-libraries;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="llvm-libraries;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
