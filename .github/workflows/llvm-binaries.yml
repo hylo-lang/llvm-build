@@ -319,8 +319,7 @@ jobs:
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
 
-          tar -c ${{ env.PACKAGE_NAME }} | zstdmt --pass-through --no-progress
-          -o ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.tar.zst
+          tar cf ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.tar.zst --zstd ${{ env.PACKAGE_NAME }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
