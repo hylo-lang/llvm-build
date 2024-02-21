@@ -110,7 +110,6 @@ jobs:
           - cxx_compiler: clang++
           - executable_suffix:
           - into_environment: '>> $GITHUB_ENV'
-          - llvm_enable_zstd_option:
           - llvm_target_arch_option:
           - package_command: tar cjf
           - package_suffix: .tar.bz2
@@ -137,11 +136,6 @@ jobs:
             package_suffix: .7z
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
-
-          - os: macos-latest
-
-            # compile_cache: ccache
-            llvm_enable_zstd_option: -D LLVM_ENABLE_ZSTD=NO
 
           - arch: x86_64
 
@@ -265,6 +259,10 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
+      - name: Install prerequisites (macOS)
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: brew install zstd
+
       - name: Configure LLVM
         run: >-
 
@@ -293,7 +291,6 @@ jobs:
           -D PACKAGE_VENDOR=hylo-lang.org
           -D LLVM_APPEND_VC_REV=NO
           -D LLVM_ENABLE_PROJECTS="lld"
-          ${{ matrix.llvm_enable_zstd_option }}
           ${{ env.llvm_host_triple_option }}
           -D LLVM_PARALLEL_LINK_JOBS=2
           ${{ matrix.llvm_target_arch_option }}
