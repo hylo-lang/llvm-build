@@ -208,6 +208,10 @@ jobs:
         run: tar xf tools.tar
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
+      - name: Clean up artifact
+        run: ${{ matrix.os == 'windows-latest' && 'Remove-Item' || 'rm' }} tools.tar
+        working-directory: ${{ github.workspace }}/BinaryCache/0
+
       - uses: actions/checkout@v4
         with:
           repository: llvm/llvm-project
