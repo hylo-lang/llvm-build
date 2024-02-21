@@ -259,9 +259,15 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
-      - name: Install prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-latest' }}
+      - name: Native prerequisites (macOS)
+        if: ${{ matrix.os == 'macos-latest' && matrix.arch == 'x86_64' }}
         run: brew install zstd
+
+      - name: Universal prerequisites (macOS)
+        if: ${{ matrix.os == 'macos-latest' && matrix.arch != 'x86_64' }}
+        uses: melusina-org/setup-macports@v1
+        with:
+          parameters: ${{ github.workspace }}/SourceCache/llvm-build/.github/parameters/setup-macports.yaml
 
       - name: Configure LLVM
         run: >-
