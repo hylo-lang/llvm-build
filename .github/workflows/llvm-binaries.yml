@@ -111,8 +111,6 @@ jobs:
           - executable_suffix:
           - into_environment: '>> $GITHUB_ENV'
           - llvm_target_arch_option:
-          - package_command: tar cjf
-          - package_suffix: .tar.bz2
           - static_lib_suffix: .a
           - toolset_suffix:
           - triple_cpu:
@@ -132,8 +130,6 @@ jobs:
             cxx_compiler: cl
             executable_suffix: .exe
             into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
-            package_command: 7z a -t7z
-            package_suffix: .7z
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
@@ -316,12 +312,12 @@ jobs:
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
 
-          ${{ matrix.package_command }}
-          ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
+          zstdmt --rm --pass-through --no-progress -r
           ${{ env.PACKAGE_NAME }}
+          -o ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.zst
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
+          files: ${{ env.PACKAGE_NAME }}.zst
