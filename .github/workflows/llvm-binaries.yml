@@ -116,6 +116,7 @@ jobs:
           - triple_cpu:
           - install_target: install-distribution-stripped
           - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
+            zstd_root_option:
 
           # Overrides
           - configuration: Debug
@@ -154,6 +155,11 @@ jobs:
             c_compiler: gcc
             cxx_compiler: g++
             triple_cpu: aarch64
+
+          - arch: arm64
+            os: macos-latest
+
+            zstd_root_option: -D zstd_ROOT=/opt/local
 
           # Extensions
           - os: windows-latest
@@ -297,6 +303,7 @@ jobs:
           -D LLVM_PARALLEL_LINK_JOBS=2
           ${{ matrix.llvm_target_arch_option }}
           -D LLVM_VERSION_SUFFIX=""
+          ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
@@ -312,12 +319,11 @@ jobs:
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
 
-          zstdmt --rm --pass-through --no-progress -r
-          ${{ env.PACKAGE_NAME }}
-          -o ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.zst
+          tar -c ${{ env.PACKAGE_NAME }} | zstdmt --pass-through --no-progress
+          -o ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.tar.zst
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ env.PACKAGE_NAME }}.zst
+          files: ${{ env.PACKAGE_NAME }}.tar.zst
