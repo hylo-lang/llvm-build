@@ -55,6 +55,7 @@ jobs:
           max-size: 100M
           key: ${{ matrix.os }}-build_tools
           variant: sccache
+          append-timestamp: false
 
       - name: Configure Tools
         run: >-
@@ -247,6 +248,7 @@ jobs:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
+          append-timestamp: false
 
       - uses: compnerd/gha-setup-vsdevenv@main
         with:
