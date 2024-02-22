@@ -172,7 +172,7 @@ jobs:
 
           - arch: x86_64
 
-            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86Utils'
+            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA'
 
           - os: windows-latest
 
@@ -303,7 +303,7 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoDWARF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
