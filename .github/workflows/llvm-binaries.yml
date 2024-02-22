@@ -60,7 +60,7 @@ jobs:
         run: >-
 
           cmake -B ${{ github.workspace }}/BinaryCache/0
-          -D CMAKE_BUILD_TYPE=Release
+          -D CMAKE_BUILD_TYPE=MinSizeRel
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -D CMAKE_C_COMPILER_LAUNCHER=sccache
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
@@ -98,7 +98,7 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         arch: [x86_64, arm64]
-        configuration: [Debug, Release]
+        configuration: [Debug, MinSizeRel]
 
         include:
           # Default values
