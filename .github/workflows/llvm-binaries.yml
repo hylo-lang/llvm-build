@@ -105,7 +105,6 @@ jobs:
           - c_compiler: clang
           - cmake_find_root_path_option:
           - cmake_system_processor_option:
-          - compile_cache: sccache
           - compile_cache_max_size: 1G
           - cxx_compiler: clang++
           - executable_suffix:
@@ -242,12 +241,12 @@ jobs:
         with:
           version: 1.11.1
 
-      - name: Setup ${{ matrix.compile_cache }}
+      - name: Setup sccache
         uses: compnerd/ccache-action@sccache-0.7.4
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
-          key: ${{ matrix.compile_cache }}-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
-          variant: ${{ matrix.compile_cache }}
+          key: sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
+          variant: sccache
 
       - uses: compnerd/gha-setup-vsdevenv@main
         with:
@@ -292,10 +291,10 @@ jobs:
           -B ${{ github.workspace }}/BinaryCache/1
           -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache
           ${{ env.cmake_c_compiler_target_option }}
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.compile_cache }}
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
           ${{ env.cmake_cxx_compiler_target_option }}
           ${{ matrix.cmake_find_root_path_option }}
           -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
