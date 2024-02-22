@@ -109,7 +109,8 @@ jobs:
           - compile_cache_max_size: 1G
           - cxx_compiler: clang++
           - executable_suffix:
-          - into_environment: '>> $GITHUB_ENV'
+          - into_github_environment: '>> $GITHUB_ENV'
+          - into_github_output: '>> $GITHUB_OUTPUT'
           - llvm_target_arch_option:
           - package_command: tar --zstd -cf
           - package_suffix: .tar.zst
@@ -132,7 +133,8 @@ jobs:
             c_compiler: cl
             cxx_compiler: cl
             executable_suffix: .exe
-            into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+            into_github_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+            into_github_output: '| Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append'
             package_command: 7z a -t7z
             package_suffix: .7z
             static_lib_suffix: .lib
@@ -275,6 +277,14 @@ jobs:
         with:
           parameters: ${{ github.workspace }}/SourceCache/llvm-build/.github/parameters/setup-macports.yaml
 
+      - name: Determine libraries to distribute
+        run: >-
+
+          ${{ github.workspace }}/BinaryCache/0/bin/llvm-config
+          --link-static --libs analysis bitwriter core native passes target x86 aarch64
+          | sed -Ee 's/^-l/libs=/' | sed -Ee 's/ -l/;/g' ${{ matrix.into_github_output }}
+        id: llvm_library_list
+
       - name: Configure LLVM
         run: >-
 
@@ -295,7 +305,7 @@ jobs:
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_system_processor_option }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="${{ steps.llvm_library_list.outputs.libs }};llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
