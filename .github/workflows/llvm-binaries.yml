@@ -337,4 +337,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ env.PACKAGE_NAME }}.tar.zst
+          files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
