@@ -111,12 +111,14 @@ jobs:
           - executable_suffix:
           - into_environment: '>> $GITHUB_ENV'
           - llvm_target_arch_option:
+          - package_command: tar --zstd -cf
+          - package_suffix: .tar.zst
           - static_lib_suffix: .a
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
           - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
-            zstd_root_option:
+          - zstd_root_option:
 
           # Overrides
           - configuration: Debug
@@ -131,6 +133,8 @@ jobs:
             cxx_compiler: cl
             executable_suffix: .exe
             into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+            package_command: 7z a -t7z
+            package_suffix: .7z
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
@@ -319,7 +323,7 @@ jobs:
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
 
-          tar cf ${{ github.workspace }}/${{ env.PACKAGE_NAME }}.tar.zst --zstd ${{ env.PACKAGE_NAME }}
+          ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
