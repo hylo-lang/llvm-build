@@ -54,6 +54,7 @@ jobs:
         with:
           max-size: 100M
           key: ${{ matrix.os }}-build_tools
+          restore-keys: ${{ matrix.os }}-build_tools
           variant: sccache
           append-timestamp: false
 
@@ -248,6 +249,7 @@ jobs:
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
+          restore-keys: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
 
