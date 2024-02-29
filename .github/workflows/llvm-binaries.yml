@@ -158,8 +158,8 @@ jobs:
             os: ubuntu-latest
 
             cmake_system_processor_option: -D CMAKE_SYSTEM_PROCESSOR=aarch64
-            c_compiler: gcc
-            cxx_compiler: g++
+            c_compiler: aarch64-linux-gnu-gcc
+            cxx_compiler: aarch64-linux-gnu-g++
             triple_cpu: aarch64
 
           - arch: arm64
