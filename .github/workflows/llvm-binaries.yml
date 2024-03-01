@@ -281,11 +281,19 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' && matrix.arch == 'x86_64' }}
         run: brew install zstd
 
-      - name: Universal prerequisites (macOS)
+      - name: Cross-build prerequisites (macOS)
         if: ${{ matrix.os == 'macos-latest' && matrix.arch != 'x86_64' }}
         uses: melusina-org/setup-macports@v1
         with:
           parameters: ${{ github.workspace }}/SourceCache/llvm-build/.github/parameters/setup-macports.yaml
+
+      - name: Cross-build prerequisites (ubuntu)
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.arch != 'x86_64' }}
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get build-dep -a arm64 llvm
+          sudo apt-get install aarch64-linux-gnu-g++ aarch64-linux-gnu-gcc
 
       - name: Configure LLVM
         run: >-
