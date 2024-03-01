@@ -302,7 +302,7 @@ jobs:
 
           sudo apt-get update
           sudo apt-get build-dep -a arm64 llvm
-          sudo apt-get install aarch64-linux-gnu-g++ aarch64-linux-gnu-gcc
+          sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Configure LLVM
         run: >-
