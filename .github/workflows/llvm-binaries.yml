@@ -291,8 +291,15 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.arch != 'x86_64' }}
         run: |
           sudo dpkg --add-architecture arm64
+
+          # See answer #4 at https://answers.launchpad.net/ubuntu/+source/apt/+question/661407
           sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-          sudo sed -Ee 's#^deb[[:space:]]+([^[:space:]]+)[[:space:]]+(.*)#deb [arch=amd64,i386] \1 \2\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ \2#g;w /etc/apt/sources.list' /etc/apt/sources.list.bak
+          sudo sed -E \
+          -e 's#^deb[[:space:]]+([^[:space:]]+)[[:space:]]+(.*)#deb [arch=amd64,i386] \1 \2\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ \2#g' \
+          -e 's/^# deb-src /deb-src /' \
+          -e 'w /etc/apt/sources.list' \
+          /etc/apt/sources.list.bak
+
           sudo apt-get update
           sudo apt-get build-dep -a arm64 llvm
           sudo apt-get install aarch64-linux-gnu-g++ aarch64-linux-gnu-gcc
