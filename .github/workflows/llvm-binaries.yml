@@ -292,7 +292,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture arm64
           sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-          sudo sed -Ee 's#^deb (http://[^/]+/ubuntu/) (.*)#deb [arch=amd64,i386] \1 \2\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ \2#g;w /etc/apt/sources.list' /etc/apt/sources.list.bak
+          sudo sed -Ee 's#^deb (http://[^/]*archive.ubuntu.com/ubuntu/) (.*)#deb [arch=amd64,i386] \1 \2\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ \2#g;w /etc/apt/sources.list' /etc/apt/sources.list.bak
           sudo apt-get update
           sudo apt-get build-dep -a arm64 llvm
           sudo apt-get install aarch64-linux-gnu-g++ aarch64-linux-gnu-gcc
