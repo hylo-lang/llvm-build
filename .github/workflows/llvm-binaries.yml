@@ -162,8 +162,8 @@ jobs:
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
-            # linked to a C++ binary with iterator debugging.
-            cmake_cxx_flags_option: -D CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0
+            # linked to a C++ binary other settings.
+            cmake_cxx_flags_option: -D "CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0;-D_MT;-D_DLL"
             cxx_compiler: cl
             executable_suffix: .exe
             into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
