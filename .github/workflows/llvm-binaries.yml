@@ -383,7 +383,7 @@ jobs:
           ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution
+        run: cmake --build ${{ matrix.os == 'windows-latest' && matrix.configuration == 'Debug' && '--verbose' || '' }} ${{ github.workspace }}/BinaryCache/1 --target distribution
 
       - name: Reclaim disk space
         if: ${{ matrix.os != 'windows-latest' }}
