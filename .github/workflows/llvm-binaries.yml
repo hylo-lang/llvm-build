@@ -134,7 +134,7 @@ jobs:
         include:
           # Default values
           - c_compiler: clang
-          - cmake_cxx_flags_option:
+          - cmake_c_cxx_flags_option:
           - cmake_find_root_path_option:
           - cmake_system_processor_option:
           - compile_cache_max_size: 1G
@@ -163,7 +163,9 @@ jobs:
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
             # linked to a C++ binary other settings.
-            cmake_cxx_flags_option: -D "CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0;-D_MT;-D_DLL"
+            cmake_c_cxx_flags_option: >-
+              -D "CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0 -D_MT -D_DLL"
+              -D "CMAKE_C_FLAGS=-D_MT -D_DLL"
             cxx_compiler: cl
             executable_suffix: .exe
             into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
@@ -355,7 +357,7 @@ jobs:
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
-          ${{ matrix.cmake_cxx_flags_option }}
+          ${{ matrix.cmake_c_cxx_flags_option }}
           ${{ matrix.cmake_system_processor_option }}
           -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
