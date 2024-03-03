@@ -1,6 +1,13 @@
 name: build-llvm-binaries
 
 on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
+
   workflow_dispatch:
     inputs:
       llvm_version:
@@ -11,8 +18,26 @@ on:
 
 env:
   SCCACHE_DIRECT: yes
+  llvm_version: ${{ github.event.inputs.llvm_version || '17.0.6' }}
 
 jobs:
+  create_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.timestamp.outputs.time }}
+
+    steps:
+    - name: Capture time
+      uses: Kaven-Universe/github-action-current-date-time@v1
+      id: timestamp
+      with:
+        format: "YYYY-MM-DD-HH-mm-ss"
+
+    - name: Create the tag.
+      uses: EndBug/latest-tag@latest
+      with:
+        ref: ${{ steps.timestamp.outputs.time }}
+
   build_tools:
     strategy:
       fail-fast: false
@@ -39,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: llvm/llvm-project
-          ref: llvmorg-${{ inputs.llvm_version }}
+          ref: llvmorg-${{ env.llvm_version }}
           path: ${{ github.workspace }}/SourceCache/llvm-project
           show-progress: false
 
@@ -92,7 +117,7 @@ jobs:
           path: ${{ github.workspace }}/BinaryCache/0/tools.tar
 
   distribution:
-    needs: [build_tools]
+    needs: [build_tools, create_tag]
 
     strategy:
       fail-fast: false
@@ -202,8 +227,7 @@ jobs:
       cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
       cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
       llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
-
+      PACKAGE_NAME: llvm-${{ github.event.inputs.llvm_version || '17.0.6' }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
 
     steps:
       # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
@@ -231,7 +255,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: llvm/llvm-project
-          ref: llvmorg-${{ inputs.llvm_version }}
+          ref: llvmorg-${{ env.llvm_version }}
           path: ${{ github.workspace }}/SourceCache/llvm-project
           show-progress: false
 
@@ -361,6 +385,6 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
+          tag_name: ${{ needs.create_tag.outputs.tag_name }}
