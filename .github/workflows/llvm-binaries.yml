@@ -80,10 +80,10 @@ jobs:
 
       - name: Setup sccache
         uses: compnerd/ccache-action@sccache-0.7.4
+        id: sccache
         with:
           max-size: 100M
           key: ${{ matrix.os }}-build_tools
-          restore-keys: ${{ matrix.os }}-build_tools
           variant: sccache
           append-timestamp: false
 
@@ -119,6 +119,16 @@ jobs:
         with:
           name: build-tools-${{ matrix.os }}
           path: ${{ github.workspace }}/BinaryCache/0/tools.tar
+
+      - name: Clear old sccache
+        if: ${{ steps.sccache.outputs.test-cache-hit }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete ${{ matrix.os }}-build_tools --confirm
+        continue-on-error: true
 
   distribution:
     needs: [build_tools, create_tag]
@@ -279,11 +289,11 @@ jobs:
           version: 1.11.1
 
       - name: Setup sccache
+        id: sccache
         uses: compnerd/ccache-action@sccache-0.7.4
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
-          restore-keys: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
 
@@ -394,3 +404,13 @@ jobs:
         with:
           files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
           tag_name: ${{ needs.create_tag.outputs.tag_name }}
+
+      - name: Clear old sccache
+        if: ${{ steps.sccache.outputs.test-cache-hit }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete ${{ matrix.os }}-build_tools --confirm
+        continue-on-error: true
