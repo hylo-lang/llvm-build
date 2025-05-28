@@ -17,7 +17,7 @@ on:
         type: string
 
 env:
-  SCCACHE_DIRECT: yes
+  SCCACHE_DIRECT: true
   llvm_version: ${{ github.event.inputs.llvm_version || '17.0.6' }}
 
 jobs:
