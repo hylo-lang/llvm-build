@@ -231,7 +231,7 @@ jobs:
           - os: macos-latest
 
             cmake_system_name: Darwin
-            triple_suffix: apple-darwin23.3.0
+            triple_suffix: apple-darwin24.1.0
 
     runs-on: ${{ matrix.os }}
 
