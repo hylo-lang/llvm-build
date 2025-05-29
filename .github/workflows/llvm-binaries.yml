@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-14, ubuntu-latest]
 
         include:
           # Default valuies
@@ -136,7 +136,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-14, ubuntu-latest]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -205,7 +205,7 @@ jobs:
             triple_cpu: aarch64
 
           - arch: arm64
-            os: macos-latest
+            os: macos-14
 
             zstd_root_option: -D zstd_ROOT=/opt/local
 
@@ -228,7 +228,7 @@ jobs:
             cmake_system_name: Linux
             triple_suffix: unknown-linux-gnu
 
-          - os: macos-latest
+          - os: macos-14
 
             cmake_system_name: Darwin
             triple_suffix: apple-darwin24.1.0
@@ -319,11 +319,11 @@ jobs:
           "@
 
       - name: Native prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-latest' && matrix.arch == 'x86_64' }}
+        if: ${{ matrix.os == 'macos-14' && matrix.arch == 'x86_64' }}
         run: brew install zstd
 
       - name: Cross-build prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-latest' && matrix.arch != 'x86_64' }}
+        if: ${{ matrix.os == 'macos-14' && matrix.arch != 'x86_64' }}
         uses: melusina-org/setup-macports@v1
         with:
           parameters: ${{ github.workspace }}/SourceCache/llvm-build/.github/parameters/setup-macports.yaml

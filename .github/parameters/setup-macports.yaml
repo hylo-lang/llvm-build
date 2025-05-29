@@ -1,4 +1,4 @@
-version: '2.8.1'
+version: '2.10.7'
 prefix: '/opt/local'
 variants:
   select:
