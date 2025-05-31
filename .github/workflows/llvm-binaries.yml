@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2022, macos-14, ubuntu-22.04]
+        os: [windows-2025, macos-14, ubuntu-22.04]
 
         include:
           # Default valuies
@@ -56,7 +56,7 @@ jobs:
           - executable_suffix:
 
           # Overrides
-          - os: windows-2022
+          - os: windows-2025
 
             c_compiler: cl
             cxx_compiler: cl
@@ -136,7 +136,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2022, macos-14, ubuntu-22.04]
+        os: [windows-2025, macos-14, ubuntu-22.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -167,7 +167,7 @@ jobs:
             install_target: install-distribution
             llvm_distribution_tools: lld;llvm-config
 
-          - os: windows-2022
+          - os: windows-2025
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
@@ -218,7 +218,7 @@ jobs:
 
             llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA'
 
-          - os: windows-2022
+          - os: windows-2025
 
             cmake_system_name: Windows
             triple_suffix: unknown-windows-msvc17
@@ -262,7 +262,7 @@ jobs:
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - name: Clean up artifact
-        run: ${{ matrix.os == 'windows-2022' && 'Remove-Item' || 'rm' }} tools.tar
+        run: ${{ matrix.os == 'windows-2025' && 'Remove-Item' || 'rm' }} tools.tar
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - uses: actions/checkout@v4
@@ -303,7 +303,7 @@ jobs:
           arch: ${{ matrix.arch == 'arm64' && 'arm64' || 'amd64' }}
 
       - name: Workaround MSVC#10444970
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-2022' }}
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-2025' }}
         run: |
           $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
           Set-Content $clangTooling @"
@@ -377,10 +377,10 @@ jobs:
           ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ matrix.os == 'windows-2022' && matrix.configuration == 'Debug' && '--verbose' || '' }}
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ matrix.os == 'windows-2025' && matrix.configuration == 'Debug' && '--verbose' || '' }}
 
       - name: Reclaim disk space
-        if: ${{ matrix.os != 'windows-2022' }}
+        if: ${{ matrix.os != 'windows-2025' }}
         run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
 
       - name: Install LLVM
