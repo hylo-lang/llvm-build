@@ -136,7 +136,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2025, macos-14, ubuntu-22.04]
+        os: [windows-2025]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
