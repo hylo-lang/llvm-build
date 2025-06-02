@@ -295,12 +295,6 @@ jobs:
           append-timestamp: false
 
       - uses: compnerd/gha-setup-vsdevenv@main
-        with:
-          host_arch: amd64
-          # See: https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2022&preserve-view=true
-          toolset_version: 17.13.35710.127
-          components: 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64;Microsoft.VisualStudio.Component.VC.Tools.ARM64'
-          arch: ${{ matrix.arch == 'arm64' && 'arm64' || 'amd64' }}
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-2025' }}
