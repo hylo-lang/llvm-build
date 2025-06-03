@@ -17,12 +17,12 @@ on:
         type: string
 
 env:
-  SCCACHE_DIRECT: yes
+  SCCACHE_DIRECT: true
   llvm_version: ${{ github.event.inputs.llvm_version || '17.0.6' }}
 
 jobs:
   create_tag:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       tag_name: ${{ steps.timestamp.outputs.time }}
 
@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-2025, macos-14, ubuntu-22.04]
 
         include:
           # Default valuies
@@ -56,7 +56,7 @@ jobs:
           - executable_suffix:
 
           # Overrides
-          - os: windows-latest
+          - os: windows-2025
 
             c_compiler: cl
             cxx_compiler: cl
@@ -136,7 +136,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-2025, macos-14, ubuntu-22.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -167,7 +167,7 @@ jobs:
             install_target: install-distribution
             llvm_distribution_tools: lld;llvm-config
 
-          - os: windows-latest
+          - os: windows-2025
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
@@ -197,7 +197,7 @@ jobs:
             triple_cpu: arm64
 
           - arch: arm64
-            os: ubuntu-latest
+            os: ubuntu-22.04
 
             cmake_system_processor_option: -D CMAKE_SYSTEM_PROCESSOR=aarch64
             c_compiler: aarch64-linux-gnu-gcc
@@ -205,7 +205,7 @@ jobs:
             triple_cpu: aarch64
 
           - arch: arm64
-            os: macos-latest
+            os: macos-14
 
             zstd_root_option: -D zstd_ROOT=/opt/local
 
@@ -218,20 +218,20 @@ jobs:
 
             llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA'
 
-          - os: windows-latest
+          - os: windows-2025
 
             cmake_system_name: Windows
             triple_suffix: unknown-windows-msvc17
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
 
             cmake_system_name: Linux
             triple_suffix: unknown-linux-gnu
 
-          - os: macos-latest
+          - os: macos-14
 
             cmake_system_name: Darwin
-            triple_suffix: apple-darwin23.3.0
+            triple_suffix: apple-darwin24.1.0
 
     runs-on: ${{ matrix.os }}
 
@@ -245,7 +245,7 @@ jobs:
     steps:
       # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
       - name: Free up disk space for debug builds
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -262,7 +262,7 @@ jobs:
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - name: Clean up artifact
-        run: ${{ matrix.os == 'windows-latest' && 'Remove-Item' || 'rm' }} tools.tar
+        run: ${{ matrix.os == 'windows-2025' && 'Remove-Item' || 'rm' }} tools.tar
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - uses: actions/checkout@v4
@@ -295,14 +295,9 @@ jobs:
           append-timestamp: false
 
       - uses: compnerd/gha-setup-vsdevenv@main
-        with:
-          host_arch: amd64
-          toolset_version: 14.37.32822
-          components: 'Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64;Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64'
-          arch: ${{ matrix.arch == 'arm64' && 'arm64' || 'amd64' }}
 
       - name: Workaround MSVC#10444970
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' }}
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-2025' }}
         run: |
           $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
           Set-Content $clangTooling @"
@@ -318,18 +313,12 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
-      - name: Native prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-latest' && matrix.arch == 'x86_64' }}
+      - name: Install prerequisites (macOS)
+        if: ${{ matrix.os == 'macos-14' }}
         run: brew install zstd
 
-      - name: Cross-build prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-latest' && matrix.arch != 'x86_64' }}
-        uses: melusina-org/setup-macports@v1
-        with:
-          parameters: ${{ github.workspace }}/SourceCache/llvm-build/.github/parameters/setup-macports.yaml
-
       - name: Cross-build prerequisites (ubuntu)
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.arch != 'x86_64' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch != 'x86_64' }}
         run: |
           sudo dpkg --add-architecture arm64
 
@@ -340,6 +329,7 @@ jobs:
           -e 's/^# deb-src /deb-src /' \
           -e 'w /etc/apt/sources.list' \
           /etc/apt/sources.list.bak
+          cat /etc/apt/sources.list
 
           sudo apt-get update
           sudo apt-get build-dep -a arm64 llvm
@@ -381,10 +371,10 @@ jobs:
           ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ matrix.os == 'windows-latest' && matrix.configuration == 'Debug' && '--verbose' || '' }}
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ matrix.os == 'windows-2025' && matrix.configuration == 'Debug' && '--verbose' || '' }}
 
       - name: Reclaim disk space
-        if: ${{ matrix.os != 'windows-latest' }}
+        if: ${{ matrix.os != 'windows-2025' }}
         run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
 
       - name: Install LLVM

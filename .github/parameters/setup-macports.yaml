@@ -1,8 +1,0 @@
-version: '2.8.1'
-prefix: '/opt/local'
-variants:
-  select:
-    - universal
-  deselect: x11
-ports:
-  - name: zstd
