@@ -11,8 +11,9 @@ on:
   workflow_dispatch:
     inputs:
       llvm_version:
-        description: 'LLVM Version (E.g. 20.1.6)'
+        description: 'LLVM Version'
         required: true
+        default: 20.1.6
         type: string
 
 env:
