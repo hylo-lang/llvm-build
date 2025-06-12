@@ -380,6 +380,13 @@ jobs:
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
 
+      - name: Patch VS path in LLVMExports.cmake (Windows only)
+        if: ${{ matrix.os == 'windows-2025' }}
+        shell: pwsh
+        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
+        run: |
+          pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
+
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
@@ -400,14 +407,3 @@ jobs:
           gh extension install actions/gh-actions-cache
           gh actions-cache delete sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package- --confirm -R ${{ github.repository }}
         continue-on-error: true
-
-      ## Post-processing step for Windows: Patch hardcoded VS path in LLVMExports.cmake
-      # After the LLVM install step, if on Windows, run the fix-vs.ps1 script to replace the hardcoded VS path.
-      # This ensures the resulting LLVMExports.cmake uses $ENV{VSINSTALLDIR} for portability.
-
-      - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ matrix.os == 'windows-2025' }}
-        shell: pwsh
-        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
-        run: |
-          pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
