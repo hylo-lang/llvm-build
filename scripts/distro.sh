@@ -3,7 +3,7 @@ set -x
 set -e
 set -o pipefail
 
-inputs_llvm_version=17.0.6
+inputs_llvm_version="${llvm_version}"
 inputs_debug_info=false
 
 matrix_os=macos-latest
