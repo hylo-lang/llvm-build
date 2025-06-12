@@ -408,6 +408,6 @@ jobs:
       - name: Patch VS path in LLVMExports.cmake (Windows only)
         if: ${{ matrix.os == 'windows-2025' }}
         shell: pwsh
-        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/lib/cmake/llvm
+        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
         run: |
           pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
