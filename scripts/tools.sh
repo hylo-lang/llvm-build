@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-inputs_llvm_version=20.1.6
+inputs_llvm_version="${llvm_version}"
 inputs_debug_info=false
 
 matrix_os=macos-latest
