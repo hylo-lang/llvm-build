@@ -1,12 +1,12 @@
 call vcvarsarm64.bat
 @echo on
 
-set LLVM_VERSION=20.1.7
+set LLVM_VERSION=20.1.6
 set SCCACHE_DIRECT=yes
 set WORKSPACE=s:\build\llvm
 mkdir %WORKSPACE%
 
-set LLVM_SOURCE=s:\src\llvm-20.1.7
+set LLVM_SOURCE=s:\src\llvm-20.1.6
 set LLVM_BUILD_SOURCE=s:\src\llvm-build
 set SCCACHE_DIR=s:\sccache
 
