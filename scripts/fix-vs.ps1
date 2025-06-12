@@ -14,8 +14,7 @@ if (-Not (Test-Path $llvmExportsPath)) {
 }
 
 # Regex to match typical VS install paths (e.g., C:/Program Files/Microsoft Visual Studio/2022/Enterprise/)
-$vsPathPattern = "C:/Program Files/Microsoft Visual Studio/[0-9]+/[A-Za-z]+/"
-
+$vsPathPattern = "C:[\\/]Program Files[\\/]Microsoft Visual Studio[\\/]([0-9]+)[\\/]([A-Za-z]+)[\\/]"
 # Read the contents of the LLVMExports.cmake file
 $fileContent = Get-Content -Path $llvmExportsPath -Raw
 
