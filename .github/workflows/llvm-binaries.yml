@@ -245,7 +245,7 @@ jobs:
     steps:
       # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
       - name: Free up disk space for debug builds
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ runner.os == 'Linux' }}
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -262,7 +262,7 @@ jobs:
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - name: Clean up artifact
-        run: ${{ matrix.os == 'windows-2025' && 'Remove-Item' || 'rm' }} tools.tar
+        run: ${{ runner.os == 'Windows' && 'Remove-Item' || 'rm' }} tools.tar
         working-directory: ${{ github.workspace }}/BinaryCache/0
 
       - uses: actions/checkout@v4
@@ -297,7 +297,7 @@ jobs:
       - uses: compnerd/gha-setup-vsdevenv@main
 
       - name: Workaround MSVC#10444970
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'windows-2025' }}
+        if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
         run: |
           $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
           Set-Content $clangTooling @"
@@ -314,11 +314,11 @@ jobs:
           "@
 
       - name: Install prerequisites (macOS)
-        if: ${{ matrix.os == 'macos-14' }}
+        if: ${{ runner.os == 'macOS' }}
         run: brew install zstd
 
       - name: Cross-build prerequisites (ubuntu)
-        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch != 'x86_64' }}
+        if: ${{ runner.os == 'Linux' && matrix.arch != 'x86_64' }}
         run: |
           sudo dpkg --add-architecture arm64
 
@@ -371,10 +371,10 @@ jobs:
           ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
-        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ matrix.os == 'windows-2025' && matrix.configuration == 'Debug' && '--verbose' || '' }}
+        run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
 
       - name: Reclaim disk space
-        if: ${{ matrix.os != 'windows-2025' }}
+        if: ${{ runner.os != 'Windows' }}
         run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
 
       - name: Install LLVM
