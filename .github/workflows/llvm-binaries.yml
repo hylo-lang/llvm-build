@@ -276,10 +276,6 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
-      - name: Patch LLVM
-        run: git apply ${{ github.workspace }}/SourceCache/llvm-build/llvm.patch
-        working-directory: ${{ github.workspace }}/SourceCache/llvm-project
-
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
           version: 1.11.1
@@ -397,5 +393,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh extension install actions/gh-actions-cache
+          gh actions-cache 
           gh actions-cache delete sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package- --confirm -R ${{ github.repository }}
         continue-on-error: true
