@@ -19,3 +19,5 @@ Swift compatibility is mostly irrelevant except when it comes to
 Windows, where these builds of LLVM always link against a release-mode
 multithreaded DLL C runtime and have iterator debugging disabled
 (`_ITERATOR_DEBUG_LEVEL=0`) for C++.
+
+> Note: On Windows, make sure to set the environment variable `VSINSTALLDIR` to something like `C:/Program Files/Microsoft Visual Studio/2022/Community`, without `/` at the end. This is needed for LLVM to locate the DIA SDK.
