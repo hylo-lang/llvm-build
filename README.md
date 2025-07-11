@@ -3,6 +3,8 @@
 GitHub CI based builds of LLVM libraries, compatible with the Swift
 runtime.
 
+The builds currently support LLVM 20.0.0 and later. Check for published version tags in the [LLVM Project](https://github.com/swiftlang/llvm-project/) (the latest released versions may not yet have tags there).
+
 [These builds](https://github.com/hylo-lang/llvm-build/releases)
 contain a set of libraries suitable for compiler
 development, and a very minimal set of tools such as `llvm-config` and

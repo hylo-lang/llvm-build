@@ -12,13 +12,13 @@ on:
     inputs:
       llvm_version:
         description: 'LLVM Version'
-        default: '17.0.6'
-        required: false
+        required: true
+        default: '20.1.6'
         type: string
 
 env:
   SCCACHE_DIRECT: true
-  llvm_version: ${{ github.event.inputs.llvm_version || '17.0.6' }}
+  llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
   create_tag:
@@ -240,7 +240,7 @@ jobs:
       cmake_cxx_compiler_target_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_CXX_COMPILER_TARGET={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
       cmake_system_name_option: ${{ matrix.arch != 'x86_64' && format('-D CMAKE_SYSTEM_NAME={0}', matrix.cmake_system_name) || '' }}
       llvm_host_triple_option: ${{ matrix.arch != 'x86_64' && format('-D LLVM_HOST_TRIPLE={0}-{1}', matrix.triple_cpu, matrix.triple_suffix) || '' }}
-      PACKAGE_NAME: llvm-${{ github.event.inputs.llvm_version || '17.0.6' }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
+      PACKAGE_NAME: llvm-${{ github.event.inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
 
     steps:
       # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
@@ -276,10 +276,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
-
-      - name: Patch LLVM
-        run: git apply ${{ github.workspace }}/SourceCache/llvm-build/llvm.patch
-        working-directory: ${{ github.workspace }}/SourceCache/llvm-project
 
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
@@ -356,7 +352,7 @@ jobs:
           ${{ env.cmake_system_name_option }}
           ${{ matrix.cmake_msvc_options }}
           ${{ matrix.cmake_system_processor_option }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
@@ -381,7 +377,7 @@ jobs:
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
 
       - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ matrix.os == 'windows-2025' }}
+        if: ${{ matrix.runner == 'Windows' }}
         shell: pwsh
         working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
         run: |
