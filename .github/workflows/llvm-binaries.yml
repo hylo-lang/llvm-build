@@ -176,8 +176,6 @@ jobs:
             cxx_compiler: cl
             executable_suffix: .exe
             into_environment: '| Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
-            package_command: 7z a -t7z
-            package_suffix: .7z
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
