@@ -381,6 +381,9 @@ jobs:
         run: |
           pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
 
+      - name: Add LLVM bin directory to PATH
+        run: echo "${GITHUB_WORKSPACE}/BuildRoot/${{ env.PACKAGE_NAME }}/bin" >> $GITHUB_PATH
+
       - name: Make llvm.pc (pkg-config)
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: ${GITHUB_WORKSPACE}/SourceCache/llvm-build/scripts/make-pkgconfig.sh ${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc
