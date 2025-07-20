@@ -375,11 +375,16 @@ jobs:
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
 
       - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ matrix.runner == 'Windows' }}
+        if: ${{ runner.os == 'Windows' }}
         shell: pwsh
         working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
         run: |
           pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
+
+      - name: Make llvm.pc (pkg-config)
+        working-directory: ${{ github.workspace }}/BuildRoot/
+        run: ${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh ${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc
+        shell: bash
 
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
