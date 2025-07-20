@@ -383,7 +383,7 @@ jobs:
 
       - name: Make llvm.pc (pkg-config)
         working-directory: ${{ github.workspace }}/BuildRoot/
-        run: ${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh ${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc
+        run: ${GITHUB_WORKSPACE}/SourceCache/llvm-build/scripts/make-pkgconfig.sh ${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc
         shell: bash
 
       - name: Package LLVM
