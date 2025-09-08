@@ -381,6 +381,11 @@ jobs:
         run: |
           pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
 
+      - name: Make llvm.pc pkg-config file
+        shell: bash
+        run: './scripts/make-llvm.sh "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
+        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin # makes llvm-config available
+
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
         run: >-
