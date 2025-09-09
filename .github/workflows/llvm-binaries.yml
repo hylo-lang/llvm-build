@@ -281,6 +281,9 @@ jobs:
       - name: Make dummy directories
         run: mkdir -p "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig"
         shell: bash
+      - name: Make dummy directories
+        run: mkdir -p "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin"
+        shell: bash
         
       - name: Make llvm.pc pkg-config file
         shell: bash
