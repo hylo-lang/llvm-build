@@ -280,7 +280,7 @@ jobs:
 
       - name: Make llvm.pc pkg-config file
         shell: bash
-        run: 'export PATH="${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin" && "${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
+        run: 'export PATH="${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin:$PATH" && "${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
 
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
