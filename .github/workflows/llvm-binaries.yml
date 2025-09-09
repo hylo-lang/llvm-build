@@ -229,7 +229,6 @@ jobs:
 
       - name: Configure LLVM
         run: >-
-
           cmake -GNinja
           -D CMAKE_BUILD_TYPE=${{ matrix.configuration }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
@@ -281,8 +280,7 @@ jobs:
 
       - name: Make llvm.pc pkg-config file
         shell: bash
-        run: '"${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
-        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin # makes llvm-config available
+        run: 'export PATH="${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin" && "${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
 
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
