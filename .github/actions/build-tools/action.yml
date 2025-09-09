@@ -33,14 +33,14 @@ runs:
       with:
         version: 1.11.1
 
-    - name: Setup sccache
-      uses: compnerd/ccache-action@sccache-0.7.4
-      if: steps.cache-built-tools.outputs.cache-hit != 'true'
-      with:
-        max-size: 100M
-        key: ${{ runner.os }}-build_tools
-        variant: sccache
-        append-timestamp: false
+    # - name: Setup sccache
+    #   uses: compnerd/ccache-action@sccache-0.7.4
+    #   if: steps.cache-built-tools.outputs.cache-hit != 'true'
+    #   with:
+    #     max-size: 100M
+    #     key: ${{ runner.os }}-build_tools
+    #     variant: sccache
+    #     append-timestamp: false
 
     - name: Configure Tools
       shell: bash
