@@ -162,12 +162,14 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - uses: actions/checkout@v4
         with:
-          path: ${{ github.workspace }}/SourceCache/llvm-build
+          path: ./SourceCache/llvm-build
           show-progress: false
+
       - name: Set up LLVM build tools and sources
-        uses: ./.github/actions/build-tools
+        uses: ./SourceCache/llvm-build/.github/actions/build-tools
         with:
           llvm_version: ${{ env.llvm_version }}
 
