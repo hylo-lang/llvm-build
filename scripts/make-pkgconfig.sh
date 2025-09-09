@@ -2,7 +2,8 @@
 set -e
 set -o pipefail
 
-version=$(llvm-config --version)
+# version="$(llvm-config --version)"
+version="20.1.6"
 filename="$1"
 
 mkdir -p "$(dirname "$filename")"
@@ -16,7 +17,8 @@ normalize_path_separators() {
 # Function to replace absolute paths with relocatable paths
 replace_with_relocatable_paths() {
     local input="$(normalize_path_separators "$1")"
-    local llvm_root="$(normalize_path_separators "$(llvm-config --prefix)")"
+    local llvm_root="$(normalize_path_separators "/myllvmprefix")"
+    # local llvm_root="$(normalize_path_separators "$(llvm-config --prefix)")"
 
     # Ensure llvm_root ends with a separator
     if [[ ! "$llvm_root" =~ /$ ]]; then
@@ -33,12 +35,15 @@ normalize_spaces() {
 }
 
 # Get libraries
-absolute_libdir="$(normalize_spaces "$(llvm-config --libdir)")"
-system_libs="$(normalize_spaces "$(llvm-config --system-libs --libs analysis bitwriter core native passes target)")"
+absolute_libdir="$(normalize_spaces "/myllvmprefix/mylibdir")"
+# absolute_libdir="$(normalize_spaces "$(llvm-config --libdir)")"
+system_libs="$(normalize_spaces "/myllvmprefix/mylibdir/libLLVM-20.so -lpthread -ldl -lm -lz -lc++abi -lc++")"
+# system_libs="$(normalize_spaces "$(llvm-config --system-libs --libs analysis bitwriter core native passes target)")"
 lib_attributes="$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")"
 
 # Get CXX flags
-cxxflags_output="$(normalize_spaces "$(llvm-config --cxxflags)")"
+cxxflags_output="$(normalize_spaces "--mycxxflags --othermycxxflags")"
+# cxxflags_output="$(normalize_spaces "$(llvm-config --cxxflags)")"
 cflags="$(replace_with_relocatable_paths "$cxxflags_output")"
 
 # Generate pkg-config content

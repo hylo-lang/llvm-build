@@ -275,6 +275,18 @@ jobs:
           path: ${{ github.workspace }}/SourceCache/llvm-build
           show-progress: false
 
+      - name: Make dummy directories
+        run: mkdir -p "${{ github.workspace }}/SourceCache/llvm-build/scripts"
+        shell: bash
+      - name: Make dummy directories
+        run: mkdir -p "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig"
+        shell: bash
+        
+      - name: Make llvm.pc pkg-config file
+        shell: bash
+        run: '"${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
+        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin # makes llvm-config available
+
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
           version: 1.11.1
@@ -383,7 +395,7 @@ jobs:
 
       - name: Make llvm.pc pkg-config file
         shell: bash
-        run: >
+        run: |
           script_path="${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh"
           script_path_fixed="${script_path//\\//}"
           llvm_pc_path="${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"
