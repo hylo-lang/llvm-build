@@ -11,7 +11,9 @@ runs:
       uses: actions/cache@v4
       id: cache-built-tools
       with:
-        path: ${{ github.workspace }}/BinaryCache/0
+        path: |
+          ${{ github.workspace }}/BinaryCache/0
+          ${{ github.workspace }}/SourceCache/llvm-project
         key: build-tools-${{ runner.os }}-llvmorg-${{ inputs.llvm_version }}-${{ hashFiles('.github/actions/build-tools/action.yml') }}
         restore-keys: |
           build-tools-${{ runner.os }}-llvmorg-
@@ -42,8 +44,9 @@ runs:
 
     - name: Configure Tools
       shell: bash
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
       run: >
-        cmake -B ${{ github.workspace }}/BinaryCache/0 
+        cmake -B "${{ github.workspace }}/BinaryCache/0" 
           -D CMAKE_BUILD_TYPE=MinSizeRel 
           -D CMAKE_C_COMPILER=clang 
           -D CMAKE_C_COMPILER_LAUNCHER=sccache 
@@ -51,13 +54,14 @@ runs:
           -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
           -D CMAKE_MT=mt
           -G Ninja
-          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
+          -S "${{ github.workspace }}/SourceCache/llvm-project/llvm"
           -D LLVM_ENABLE_ASSERTIONS=NO
           -D LLVM_ENABLE_LIBEDIT=NO
           -D LLVM_ENABLE_PROJECTS=""
 
     - name: Build tools
       shell: bash
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
       run: >
         cmake 
           --build ${{ github.workspace }}/BinaryCache/0 
