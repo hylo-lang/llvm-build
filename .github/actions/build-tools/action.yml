@@ -50,4 +50,4 @@ runs:
     - name: Build tools
       shell: bash
       if: steps.cache-built-tools.outputs.cache-hit != 'true'
-      run: cmake --build ${{ github.workspace }}/BinaryCache/0 --target llvm-tblgen --target llvm-config
+      run: cmake --build "${{ github.workspace }}/BinaryCache/0" --target llvm-tblgen --target llvm-config
