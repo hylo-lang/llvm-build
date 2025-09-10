@@ -14,9 +14,9 @@ runs:
         path: |
           ${{ github.workspace }}/BinaryCache/0
           ${{ github.workspace }}/SourceCache/llvm-project
-        key: build-tools-${{ runner.os }}-llvmorg-${{ inputs.llvm_version }}-${{ hashFiles('.github/actions/build-tools/action.yml') }}
+        key: build-tools-${{ runner.os }}-{ runner.arch }-${{ inputs.llvm_version }}-${{ hashFiles('.github/actions/build-tools/action.yml') }}
         restore-keys: |
-          build-tools-${{ runner.os }}-llvmorg-
+          build-tools-${{ runner.os }}-{ runner.arch }-
 
     - name: Checkout LLVM sources
       uses: actions/checkout@v4
