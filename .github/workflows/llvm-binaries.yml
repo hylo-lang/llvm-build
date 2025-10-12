@@ -284,8 +284,8 @@ jobs:
 
       - name: Copy pkg-config Installation Scripts
         run: |
-          ${{ github.workspace }}/SourceCache/llvm-build/scripts/install-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
-          ${{ github.workspace }}/SourceCache/llvm-build/scripts/make-absolute-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
+          cp ${{ github.workspace }}/SourceCache/llvm-build/scripts/install-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
+          cp ${{ github.workspace }}/SourceCache/llvm-build/scripts/make-absolute-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
 
