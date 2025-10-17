@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2025, macos-14, ubuntu-22.04]
+        os: [windows-2025, macos-15, ubuntu-22.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -116,7 +116,7 @@ jobs:
             triple_cpu: aarch64
 
           - arch: arm64
-            os: macos-14
+            os: macos-15
 
             zstd_root_option: -D zstd_ROOT=/opt/local
 
@@ -139,7 +139,7 @@ jobs:
             cmake_system_name: Linux
             triple_suffix: unknown-linux-gnu
 
-          - os: macos-14
+          - os: macos-15
 
             cmake_system_name: Darwin
             triple_suffix: apple-darwin24.1.0
