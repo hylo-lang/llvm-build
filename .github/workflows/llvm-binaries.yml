@@ -166,10 +166,34 @@ jobs:
       - name: Free up disk space for debug builds
         if: ${{ runner.os == 'Linux' }}
         run: |
+          echo "Available disk space before cleanup:"
+          df -h
+          
+          # Remove .NET and related tools
           sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          # Remove additional large packages and caches
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/graalvm
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/heroku
+          
+          # Clean apt cache
+          sudo apt-get clean
+          sudo apt-get autoremove -y
+          
+          # Remove unnecessary packages
+          sudo apt-get remove -y '^ghc-*' '^dotnet-*' '^llvm-*' '^clang-*' || true
+          sudo apt-get autoremove -y
+          
+          echo "Available disk space after cleanup:"
+          df -h
 
       - name: Set up specific Xcode version
         uses: maxim-lobanov/setup-xcode@v1
@@ -279,9 +303,52 @@ jobs:
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
 
-      - name: Reclaim disk space
+      - name: Reclaim disk space after build
         if: ${{ runner.os != 'Windows' }}
-        run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
+        run: |
+          echo "Disk space before build cleanup:"
+          df -h
+          
+          # Remove object files and intermediate build artifacts
+          find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm -f
+          find ${{ github.workspace }}/BinaryCache/ -name '*.obj' -print0 | xargs -0 rm -f
+          find ${{ github.workspace }}/BinaryCache/ -name '*.tmp' -print0 | xargs -0 rm -f
+          
+          # Remove CMake cache files and temporary directories
+          find ${{ github.workspace }}/BinaryCache/ -name 'CMakeFiles' -type d -exec rm -rf {} + || true
+          find ${{ github.workspace }}/BinaryCache/ -name '*.cmake' -not -path '*/cmake-exports/*' -delete || true
+          
+          # Clean up sccache temporary files
+          sccache --stop-server || true
+          
+          echo "Disk space after build cleanup:"
+          df -h
+
+      - name: Additional cleanup before install
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          # Clean up more system directories if space is still tight
+          AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
+          echo "Available space: ${AVAILABLE_SPACE}KB"
+          
+          # If less than 2GB available, do aggressive cleanup
+          if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then
+            echo "Low disk space detected, performing aggressive cleanup..."
+            
+            # Remove more development tools and caches
+            sudo rm -rf /usr/local/share/vcpkg || true
+            sudo rm -rf /usr/local/share/gem || true
+            sudo rm -rf /usr/share/doc || true
+            sudo rm -rf /usr/share/man || true
+            sudo rm -rf /var/cache/apt || true
+            sudo rm -rf /tmp/* || true
+            
+            # Clear journal logs
+            sudo journalctl --vacuum-time=1d || true
+            
+            echo "Disk space after aggressive cleanup:"
+            df -h
+          fi
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
