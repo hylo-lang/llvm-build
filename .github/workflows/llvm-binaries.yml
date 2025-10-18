@@ -179,17 +179,10 @@ jobs:
           # Remove additional large packages and caches
           sudo rm -rf /usr/local/lib/node_modules
           sudo rm -rf /usr/share/swift
-          sudo rm -rf /usr/local/graalvm
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/share/chromium
           sudo rm -rf /usr/local/lib/heroku
           
-          # Clean apt cache
-          sudo apt-get clean
-          sudo apt-get autoremove -y
-          
           # Remove unnecessary packages
-          sudo apt-get remove -y '^ghc-*' '^dotnet-*' '^llvm-*' '^clang-*' || true
+          sudo apt-get remove -y '^ghc-*' '^dotnet-*' || true
           sudo apt-get autoremove -y
           
           echo "Available disk space after cleanup:"
@@ -313,14 +306,7 @@ jobs:
           find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm -f
           find ${{ github.workspace }}/BinaryCache/ -name '*.obj' -print0 | xargs -0 rm -f
           find ${{ github.workspace }}/BinaryCache/ -name '*.tmp' -print0 | xargs -0 rm -f
-          
-          # Remove CMake cache files and temporary directories
-          find ${{ github.workspace }}/BinaryCache/ -name 'CMakeFiles' -type d -exec rm -rf {} + || true
-          find ${{ github.workspace }}/BinaryCache/ -name '*.cmake' -not -path '*/cmake-exports/*' -delete || true
-          
-          # Clean up sccache temporary files
-          sccache --stop-server || true
-          
+ 
           echo "Disk space after build cleanup:"
           df -h
 
