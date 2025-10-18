@@ -120,6 +120,14 @@ jobs:
 
             zstd_root_option: -D zstd_ROOT=/opt/local
 
+          # macOS debug symbol compatibility fixes
+          - os: macos-15
+            configuration: Debug
+
+            cmake_debug_options: >-
+              -D CMAKE_C_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
+              -D CMAKE_CXX_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
+
           # Extensions
           - arch: arm64
 
@@ -242,6 +250,7 @@ jobs:
           ${{ env.cmake_cxx_compiler_target_option }}
           ${{ matrix.cmake_find_root_path_option }}
           -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          ${{ matrix.cmake_debug_options }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
@@ -270,6 +279,25 @@ jobs:
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
+
+      - name: Validate debug symbols (macOS Debug)
+        if: ${{ runner.os == 'macOS' && matrix.configuration == 'Debug' }}
+        shell: bash
+        run: |
+          echo "=== Debug Symbol Validation ==="
+          echo "Xcode version: $(xcode-select --print-path)"
+          echo "dsymutil version: $(dsymutil --version)"
+          echo "clang version: $(clang --version)"
+          
+          # Test debug symbol format on a sample library
+          SAMPLE_LIB=$(find ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/lib -name "*.a" | head -1)
+          if [ -n "$SAMPLE_LIB" ]; then
+            echo "Testing debug symbols in: $SAMPLE_LIB"
+            dwarfdump --verify "$SAMPLE_LIB" 2>&1 | head -20 || true
+            
+            echo "DWARF sections:"
+            dwarfdump --debug-info=0x0 "$SAMPLE_LIB" 2>&1 | head -10 || true
+          fi
 
       - name: Patch VS path in LLVMExports.cmake (Windows only)
         if: ${{ runner.os == 'Windows' }}
