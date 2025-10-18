@@ -1,0 +1,53 @@
+name: 'Build LLVM Tools'
+description: 'Builds and caches LLVM build tools (llvm-tblgen, llvm-config)'
+inputs:
+  llvm_version:
+    description: 'LLVM version to build'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache built tools
+      uses: actions/cache@v4
+      id: cache-built-tools
+      with:
+        path: |
+          ${{ github.workspace }}/BinaryCache/0
+          ${{ github.workspace }}/SourceCache/llvm-project
+        key: build-tools-${{ runner.os }}-{ runner.arch }-${{ inputs.llvm_version }}-${{ hashFiles('.github/actions/build-tools/action.yml') }}
+        restore-keys: |
+          build-tools-${{ runner.os }}-{ runner.arch }-
+
+    - name: Checkout LLVM sources
+      uses: actions/checkout@v4
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
+      with:
+        repository: llvm/llvm-project
+        ref: llvmorg-${{ inputs.llvm_version }}
+        path: ${{ github.workspace }}/SourceCache/llvm-project
+        show-progress: false
+
+    - name: Setup Ninja
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
+      uses: seanmiddleditch/gha-setup-ninja@master
+      with:
+        version: 1.11.1
+
+    # - name: Setup sccache
+    #   uses: compnerd/ccache-action@sccache-0.7.4
+    #   if: steps.cache-built-tools.outputs.cache-hit != 'true'
+    #   with:
+    #     max-size: 100M
+    #     key: ${{ runner.os }}-build_tools
+    #     variant: sccache
+    #     append-timestamp: false
+
+    - name: Configure Tools
+      shell: bash
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
+      run: cmake -B "${{ github.workspace }}/BinaryCache/0" -D CMAKE_BUILD_TYPE=MinSizeRel -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++  -D CMAKE_MT=mt  -G Ninja  -S "${{ github.workspace }}/SourceCache/llvm-project/llvm"  -D LLVM_ENABLE_ASSERTIONS=NO  -D LLVM_ENABLE_LIBEDIT=NO  -D LLVM_ENABLE_PROJECTS=""
+
+    - name: Build tools
+      shell: bash
+      if: steps.cache-built-tools.outputs.cache-hit != 'true'
+      run: cmake --build "${{ github.workspace }}/BinaryCache/0" --target llvm-tblgen --target llvm-config

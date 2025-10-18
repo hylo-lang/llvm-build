@@ -42,101 +42,14 @@ jobs:
       with:
         ref: ${{ steps.timestamp.outputs.time }}
 
-  build_tools:
-    strategy:
-      fail-fast: false
-
-      matrix:
-        os: [windows-2025, macos-14, ubuntu-22.04]
-
-        include:
-          # Default valuies
-          - c_compiler: clang
-          - cxx_compiler: clang++
-          - executable_suffix:
-
-          # Overrides
-          - os: windows-2025
-
-            c_compiler: cl
-            cxx_compiler: cl
-            executable_suffix: .exe
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: llvm/llvm-project
-          ref: llvmorg-${{ env.llvm_version }}
-          path: ${{ github.workspace }}/SourceCache/llvm-project
-          show-progress: false
-
-      - uses: compnerd/gha-setup-vsdevenv@main
-
-      - uses: seanmiddleditch/gha-setup-ninja@master
-        with:
-          version: 1.11.1
-
-      - name: Setup sccache
-        uses: compnerd/ccache-action@sccache-0.7.4
-        id: sccache
-        with:
-          max-size: 100M
-          key: ${{ matrix.os }}-build_tools
-          variant: sccache
-          append-timestamp: false
-
-      - name: Configure Tools
-        run: >-
-
-          cmake -B ${{ github.workspace }}/BinaryCache/0
-          -D CMAKE_BUILD_TYPE=MinSizeRel
-          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_C_COMPILER_LAUNCHER=sccache
-          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
-          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_MT=mt
-          -G Ninja
-          -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
-          -D LLVM_ENABLE_ASSERTIONS=NO
-          -D LLVM_ENABLE_LIBEDIT=NO
-          -D LLVM_ENABLE_PROJECTS=""
-
-
-      - name: Build tools
-        run: >-
-
-          cmake --build ${{ github.workspace }}/BinaryCache/0
-          --target llvm-tblgen
-          --target llvm-config
-
-      - name: Archive tools
-        run: tar cf tools.tar bin
-        working-directory: ${{ github.workspace }}/BinaryCache/0
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0/tools.tar
-
-      - name: Clear old sccache
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete sccache-${{ matrix.os }}-build_tools- --confirm -R ${{ github.repository }}
-        continue-on-error: true
-
   distribution:
-    needs: [build_tools, create_tag]
+    needs: [create_tag]
 
     strategy:
       fail-fast: false
 
       matrix:
-        os: [windows-2025, macos-14, ubuntu-22.04]
+        os: [windows-2025, macos-15, ubuntu-22.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -203,9 +116,17 @@ jobs:
             triple_cpu: aarch64
 
           - arch: arm64
-            os: macos-14
+            os: macos-15
 
             zstd_root_option: -D zstd_ROOT=/opt/local
+
+          # macOS debug symbol compatibility fixes
+          - os: macos-15
+            configuration: Debug
+
+            cmake_debug_options: >-
+              -D CMAKE_C_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
+              -D CMAKE_CXX_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
 
           # Extensions
           - arch: arm64
@@ -226,7 +147,7 @@ jobs:
             cmake_system_name: Linux
             triple_suffix: unknown-linux-gnu
 
-          - os: macos-14
+          - os: macos-15
 
             cmake_system_name: Darwin
             triple_suffix: apple-darwin24.1.0
@@ -245,35 +166,43 @@ jobs:
       - name: Free up disk space for debug builds
         if: ${{ runner.os == 'Linux' }}
         run: |
+          echo "Available disk space before cleanup:"
+          df -h
+          
+          # Remove .NET and related tools
           sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          # Remove additional large packages and caches
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/lib/heroku
+          
+          # Remove unnecessary packages
+          sudo apt-get remove -y '^ghc-*' '^dotnet-*' || true
+          sudo apt-get autoremove -y
+          
+          echo "Available disk space after cleanup:"
+          df -h
 
-      - uses: actions/download-artifact@v4
+      - name: Set up specific Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ runner.os == 'macOS' }}
         with:
-          name: build-tools-${{ matrix.os }}
-          path: ${{ github.workspace }}/BinaryCache/0
-
-      - name: Extract tools
-        run: tar xf tools.tar
-        working-directory: ${{ github.workspace }}/BinaryCache/0
-
-      - name: Clean up artifact
-        run: ${{ runner.os == 'Windows' && 'Remove-Item' || 'rm' }} tools.tar
-        working-directory: ${{ github.workspace }}/BinaryCache/0
+          xcode-version: '26.0.1'
 
       - uses: actions/checkout@v4
         with:
-          repository: llvm/llvm-project
-          ref: llvmorg-${{ env.llvm_version }}
-          path: ${{ github.workspace }}/SourceCache/llvm-project
+          path: ./SourceCache/llvm-build
           show-progress: false
 
-      - uses: actions/checkout@v4
+      - name: Set up LLVM build tools and sources
+        uses: ./SourceCache/llvm-build/.github/actions/build-tools
         with:
-          path: ${{ github.workspace }}/SourceCache/llvm-build
-          show-progress: false
+          llvm_version: ${{ env.llvm_version }}
 
       - uses: seanmiddleditch/gha-setup-ninja@master
         with:
@@ -331,7 +260,6 @@ jobs:
 
       - name: Configure LLVM
         run: >-
-
           cmake -GNinja
           -D CMAKE_BUILD_TYPE=${{ matrix.configuration }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
@@ -345,6 +273,7 @@ jobs:
           ${{ env.cmake_cxx_compiler_target_option }}
           ${{ matrix.cmake_find_root_path_option }}
           -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          ${{ matrix.cmake_debug_options }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ env.cmake_system_name_option }}
@@ -367,19 +296,85 @@ jobs:
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
 
-      - name: Reclaim disk space
+      - name: Reclaim disk space after build
         if: ${{ runner.os != 'Windows' }}
-        run: find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm
+        run: |
+          echo "Disk space before build cleanup:"
+          df -h
+          
+          # Remove object files and intermediate build artifacts
+          find ${{ github.workspace }}/BinaryCache/ -name '*.o' -print0 | xargs -0 rm -f
+          find ${{ github.workspace }}/BinaryCache/ -name '*.obj' -print0 | xargs -0 rm -f
+          find ${{ github.workspace }}/BinaryCache/ -name '*.tmp' -print0 | xargs -0 rm -f
+ 
+          echo "Disk space after build cleanup:"
+          df -h
+
+      - name: Additional cleanup before install
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          # Clean up more system directories if space is still tight
+          AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
+          echo "Available space: ${AVAILABLE_SPACE}KB"
+          
+          # If less than 2GB available, do aggressive cleanup
+          if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then
+            echo "Low disk space detected, performing aggressive cleanup..."
+            
+            # Remove more development tools and caches
+            sudo rm -rf /usr/local/share/vcpkg || true
+            sudo rm -rf /usr/local/share/gem || true
+            sudo rm -rf /usr/share/doc || true
+            sudo rm -rf /usr/share/man || true
+            sudo rm -rf /var/cache/apt || true
+            sudo rm -rf /tmp/* || true
+            
+            # Clear journal logs
+            sudo journalctl --vacuum-time=1d || true
+            
+            echo "Disk space after aggressive cleanup:"
+            df -h
+          fi
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
 
+      - name: Validate debug symbols (macOS Debug)
+        if: ${{ runner.os == 'macOS' && matrix.configuration == 'Debug' }}
+        shell: bash
+        run: |
+          echo "=== Debug Symbol Validation ==="
+          echo "Xcode version: $(xcode-select --print-path)"
+          echo "dsymutil version: $(dsymutil --version)"
+          echo "clang version: $(clang --version)"
+          
+          # Test debug symbol format on a sample library
+          SAMPLE_LIB=$(find ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/lib -name "*.a" | head -1)
+          if [ -n "$SAMPLE_LIB" ]; then
+            echo "Testing debug symbols in: $SAMPLE_LIB"
+            dwarfdump --verify "$SAMPLE_LIB" 2>&1 | head -20 || true
+            
+            echo "DWARF sections:"
+            dwarfdump --debug-info=0x0 "$SAMPLE_LIB" 2>&1 | head -10 || true
+          fi
+
       - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ matrix.runner == 'Windows' }}
+        if: ${{ runner.os == 'Windows' }}
         shell: pwsh
         working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
         run: |
           pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
+
+      - name: Make llvm.pc pkg-config file
+        shell: bash
+        run: 'export PATH="${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin:$PATH" && "${{ github.workspace }}/SourceCache/llvm-build/scripts/make-pkgconfig.sh" "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/llvm.pc"'
+
+      - name: Copy pkg-config Installation Scripts
+        run: |
+          cp ${{ github.workspace }}/SourceCache/llvm-build/scripts/install-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
+          cp ${{ github.workspace }}/SourceCache/llvm-build/scripts/make-absolute-pc.sh ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
+          chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
+          chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
 
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
