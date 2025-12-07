@@ -363,7 +363,7 @@ jobs:
           
           # Test llvm-config
           echo "Testing llvm-config..."
-          ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }} --version
+          "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }}" --version
 
       - name: Make llvm.pc pkg-config file
         shell: bash
