@@ -27,11 +27,11 @@ runs:
         path: ${{ github.workspace }}/SourceCache/llvm-project
         show-progress: false
 
-    - name: Setup Ninja
-      if: steps.cache-built-tools.outputs.cache-hit != 'true'
-      uses: seanmiddleditch/gha-setup-ninja@master
+    - name: Get latest CMake and Ninja
+      uses: lukka/get-cmake@latest
       with:
-        version: 1.13.1
+        ninjaVersion: 1.13.2
+        cmakeVersion: 4.2.0
 
     # - name: Setup sccache
     #   uses: compnerd/ccache-action@sccache-0.7.4
