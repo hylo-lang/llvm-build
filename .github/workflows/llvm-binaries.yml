@@ -83,7 +83,7 @@ jobs:
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
-            # linked to a C++ binary other settings.
+            # linked to a C++ binary with other settings.
             cmake_msvc_options: -D CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0 -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
             cxx_compiler: cl
             executable_suffix: .exe
