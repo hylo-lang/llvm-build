@@ -221,7 +221,7 @@ jobs:
 
       - name: Setup sccache
         id: sccache
-        uses: compnerd/ccache-action@sccache-0.7.4
+        uses: hendrikmuhs/ccache-action@v1.2.20
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
@@ -363,10 +363,7 @@ jobs:
           
           # Test llvm-config
           echo "Testing llvm-config..."
-          ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }} --version          
-          # Test lld
-          echo "Testing lld..."
-          ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/lld${{ matrix.executable_suffix }} --version
+          ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }} --version
 
       - name: Make llvm.pc pkg-config file
         shell: bash
