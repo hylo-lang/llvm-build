@@ -27,7 +27,7 @@ runs:
         path: ${{ github.workspace }}/SourceCache/llvm-project
         show-progress: false
 
-    - name: Get latest CMake and Ninja
+    - name: Install CMake and Ninja
       uses: lukka/get-cmake@latest
       with:
         ninjaVersion: 1.13.2
