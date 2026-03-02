@@ -69,7 +69,7 @@ jobs:
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
-          - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
+          - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings;wasm-ld
           - zstd_root_option:
 
           # Overrides
@@ -77,7 +77,7 @@ jobs:
 
             compile_cache_max_size: 2G
             install_target: install-distribution
-            llvm_distribution_tools: lld;llvm-config
+            llvm_distribution_tools: lld;llvm-config;wasm-ld
 
           - os: windows-2025
 
@@ -119,11 +119,11 @@ jobs:
           # Extensions
           - arch: arm64
 
-            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
+            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils'
 
           - arch: x86_64
 
-            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
+            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils'
 
           - os: windows-2025
 
@@ -367,10 +367,20 @@ jobs:
           
           # Verify RISCV target support for ESP32-C3 cross compilation
           echo "Checking RISCV target availability..."
+          "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version
           if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version | grep -qi "riscv"; then
             echo "RISCV target support detected."
           else
             echo "ERROR: RISCV target support was not found in this package."
+            # exit 1 todo add error if it works
+          fi
+
+          # Verify WebAssembly target support for wasm code generation
+          echo "Checking WebAssembly target availability..."
+          if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version | grep -qi "webassembly"; then
+            echo "WebAssembly target support detected."
+          else
+            echo "ERROR: WebAssembly target support was not found in this package."
             # exit 1 todo add error if it works
           fi
 

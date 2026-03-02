@@ -68,8 +68,10 @@ set(LLVM_TOOLCHAIN_TOOLS
   readelf
   size
   strings
+  wasm-ld
   CACHE STRING "")
 
 set(LLD_TOOLS
       lld
+      wasm-ld
     CACHE STRING "")
