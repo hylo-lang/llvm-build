@@ -119,11 +119,11 @@ jobs:
           # Extensions
           - arch: arm64
 
-            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils'
+            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
 
           - arch: x86_64
 
-            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA'
+            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
 
           - os: windows-2025
 
@@ -364,6 +364,15 @@ jobs:
           # Test llvm-config
           echo "Testing llvm-config..."
           "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }}" --version
+          
+          # Verify RISCV target support for ESP32-C3 cross compilation
+          echo "Checking RISCV target availability..."
+          if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version | grep -qi "riscv"; then
+            echo "RISCV target support detected."
+          else
+            echo "ERROR: RISCV target support was not found in this package."
+            # exit 1 todo add error if it works
+          fi
 
       - name: Make llvm.pc pkg-config file
         shell: bash
