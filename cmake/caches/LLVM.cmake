@@ -7,7 +7,7 @@ set(ENABLE_X86_RELAX_RELOCATIONS YES CACHE BOOL "")
 set(LLVM_APPEND_VC_REV NO CACHE BOOL "")
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR YES CACHE BOOL "")
 
-set(LLVM_TARGETS_TO_BUILD AArch64 ARM RISCV WebAssembly X86 CACHE STRING "")
+set(LLVM_TARGETS_TO_BUILD all CACHE STRING "")
 
 # Disable certain targets to reduce the configure time or to avoid configuration
 # differences (and in some cases weird build errors on a complete build).

@@ -117,13 +117,6 @@ jobs:
               -D CMAKE_CXX_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
 
           # Extensions
-          - arch: arm64
-
-            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
-
-          - arch: x86_64
-
-            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo'
 
           - os: windows-2025
 
@@ -267,7 +260,7 @@ jobs:
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ matrix.cmake_msvc_options }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMAllTargetsAsmParsers;LLVMAllTargetsCodeGens;LLVMAllTargetsDescs;LLVMAllTargetsDisassemblers;LLVMAllTargetsInfos;LLVMAllTargetsMCAs;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
