@@ -58,6 +58,7 @@ jobs:
           - c_compiler: clang
           - cmake_msvc_options:
           - cmake_find_root_path_option:
+          - cmake_msvc_debug_info_format_option:
           - cmake_system_processor_option:
           - compile_cache_max_size: 1G
           - cxx_compiler: clang++
@@ -76,6 +77,7 @@ jobs:
           - configuration: Debug
 
             compile_cache_max_size: 2G
+            cmake_msvc_debug_info_format_option: -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
             install_target: install-distribution
             llvm_distribution_tools: lld;llvm-config
 
@@ -255,7 +257,7 @@ jobs:
           -D CMAKE_C_COMPILER_LAUNCHER=sccache
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
           -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          ${{ matrix.cmake_msvc_debug_info_format_option }}
           ${{ matrix.cmake_debug_options }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
