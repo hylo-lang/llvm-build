@@ -34,7 +34,7 @@ normalize_spaces() {
 
 # Get libraries
 absolute_libdir=$(normalize_spaces "$(llvm-config --libdir)")
-system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs analysis bitwriter core native passes target)")
+system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis bitwriter passes target all-targets)")
 lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
 
 # Get CXX flags

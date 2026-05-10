@@ -58,6 +58,7 @@ jobs:
           - c_compiler: clang
           - cmake_msvc_options:
           - cmake_find_root_path_option:
+          - cmake_msvc_debug_info_format_option:
           - cmake_system_processor_option:
           - compile_cache_max_size: 1G
           - cxx_compiler: clang++
@@ -69,13 +70,14 @@ jobs:
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
-          - llvm_distribution_tools: addr2line;ar;c++filt;dsymutil;dwp;lld;llvm-ar;llvm-config;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
+          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
           - zstd_root_option:
 
           # Overrides
           - configuration: Debug
 
             compile_cache_max_size: 2G
+            cmake_msvc_debug_info_format_option: -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
             install_target: install-distribution
             llvm_distribution_tools: lld;llvm-config
 
@@ -117,13 +119,6 @@ jobs:
               -D CMAKE_CXX_FLAGS_DEBUG="-g -gdwarf-4 -fno-limit-debug-info"
 
           # Extensions
-          - arch: arm64
-
-            llvm_backend_libs: 'LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils'
-
-          - arch: x86_64
-
-            llvm_backend_libs: 'LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMX86TargetMCA'
 
           - os: windows-2025
 
@@ -262,12 +257,12 @@ jobs:
           -D CMAKE_C_COMPILER_LAUNCHER=sccache
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
           -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          ${{ matrix.cmake_msvc_debug_info_format_option }}
           ${{ matrix.cmake_debug_options }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ matrix.cmake_msvc_options }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="${{ matrix.llvm_backend_libs }};LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMX86TargetMCA;LLVMRISCVTargetMCA;LLVMAMDGPUTargetMCA;LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMAggressiveInstCombine;LLVMAMDGPUAsmParser;LLVMAMDGPUCodeGen;LLVMAMDGPUDesc;LLVMAMDGPUDisassembler;LLVMAMDGPUInfo;LLVMAMDGPUUtils;LLVMAnalysis;LLVMARMAsmParser;LLVMARMCodeGen;LLVMARMDesc;LLVMARMDisassembler;LLVMARMInfo;LLVMARMUtils;LLVMAsmParser;LLVMAsmPrinter;LLVMAVRAsmParser;LLVMAVRCodeGen;LLVMAVRDesc;LLVMAVRDisassembler;LLVMAVRInfo;LLVMBinaryFormat;LLVMBitReader;LLVMBitstreamReader;LLVMBitWriter;LLVMBPFAsmParser;LLVMBPFCodeGen;LLVMBPFDesc;LLVMBPFDisassembler;LLVMBPFInfo;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHexagonAsmParser;LLVMHexagonCodeGen;LLVMHexagonDesc;LLVMHexagonDisassembler;LLVMHexagonInfo;LLVMHipStdPar;LLVMInstCombine;LLVMInstrumentation;LLVMipo;LLVMIRPrinter;LLVMIRReader;LLVMLanaiAsmParser;LLVMLanaiCodeGen;LLVMLanaiDesc;LLVMLanaiDisassembler;LLVMLanaiInfo;LLVMLinker;LLVMLoongArchAsmParser;LLVMLoongArchCodeGen;LLVMLoongArchDesc;LLVMLoongArchDisassembler;LLVMLoongArchInfo;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMMipsAsmParser;LLVMMipsCodeGen;LLVMMipsDesc;LLVMMipsDisassembler;LLVMMipsInfo;LLVMMIRParser;LLVMMSP430AsmParser;LLVMMSP430CodeGen;LLVMMSP430Desc;LLVMMSP430Disassembler;LLVMMSP430Info;LLVMNVPTXCodeGen;LLVMNVPTXDesc;LLVMNVPTXInfo;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMPowerPCAsmParser;LLVMPowerPCCodeGen;LLVMPowerPCDesc;LLVMPowerPCDisassembler;LLVMPowerPCInfo;LLVMProfileData;LLVMRemarks;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSparcAsmParser;LLVMSparcCodeGen;LLVMSparcDesc;LLVMSparcDisassembler;LLVMSparcInfo;LLVMSPIRVAnalysis;LLVMSPIRVCodeGen;LLVMSPIRVDesc;LLVMSPIRVInfo;LLVMSupport;LLVMSymbolize;LLVMSystemZAsmParser;LLVMSystemZCodeGen;LLVMSystemZDesc;LLVMSystemZDisassembler;LLVMSystemZInfo;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVEAsmParser;LLVMVECodeGen;LLVMVectorize;LLVMVEDesc;LLVMVEDisassembler;LLVMVEInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils;LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMXCoreCodeGen;LLVMXCoreDesc;LLVMXCoreDisassembler;LLVMXCoreInfo;cmake-exports;lld-cmake-exports;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
@@ -364,6 +359,15 @@ jobs:
           # Test llvm-config
           echo "Testing llvm-config..."
           "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }}" --version
+          
+          # Verify RISCV target support for ESP32-C3 cross compilation
+          echo "Checking RISCV target availability..."
+          if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version | grep -qi "riscv"; then
+            echo "RISCV target support detected."
+          else
+            echo "ERROR: RISCV target support was not found in this package."
+            # exit 1 todo add error if it works
+          fi
 
       - name: Make llvm.pc pkg-config file
         shell: bash
