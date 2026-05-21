@@ -32,9 +32,31 @@ normalize_spaces() {
     echo "$1" | sed 's/[[:space:]]\+/ /g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
+# On Windows, llvm-config --libs outputs full paths (e.g. C:\path\LLVMCore.lib)
+# instead of -lLLVMCore. Convert them to -l flags for SPM compatibility.
+convert_libs_to_flags() {
+    local input="$1"
+    local operating_system
+    operating_system="$(uname -s)"
+    if [[ "$operating_system" == MINGW* || "$operating_system" == MSYS* || "$operating_system" == CYGWIN* ]]; then
+        echo "$input" | tr ' ' '\n' | sed 's|\\|/|g' | while read -r token; do
+            if [[ "$token" == *.lib ]]; then
+                local name
+                name="$(basename "$token" .lib)"
+                echo "-l${name}"
+            else
+                echo "$token"
+            fi
+        done | tr '\n' ' ' | sed 's/[[:space:]]*$//'
+    else
+        echo "$input"
+    fi
+}
+
 # Get libraries
 absolute_libdir=$(normalize_spaces "$(llvm-config --libdir)")
 system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis bitwriter passes target all-targets)")
+system_libs=$(convert_libs_to_flags "$system_libs")
 lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
 
 # Get CXX flags
