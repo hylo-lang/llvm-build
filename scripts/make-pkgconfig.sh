@@ -8,12 +8,16 @@ filename=$1
 mkdir -p $(dirname $filename)
 touch $filename
 
-# Function to normalize path separators (replace backslashes with forward slashes)
+# Outputs $1 with normalized path separators.
+#
+# Replaces backslashes with forward slashes.
 normalize_path_separators() {
     echo "$1" | sed 's/\\/\//g'
 }
 
-# Function to replace absolute paths with relocatable paths
+# Outputs $1 with absolute paths replaced with relocatable paths.
+#
+# Occurrences of the package prefix are replaced by "${pcfiledir}/../".
 replace_with_relocatable_paths() {
     local input=$(normalize_path_separators "$1")
     local llvm_root=$(normalize_path_separators "$(llvm-config --prefix)")
@@ -27,13 +31,18 @@ replace_with_relocatable_paths() {
     echo "$input" | sed "s|${llvm_root}|\${pcfiledir}/../|g"
 }
 
-# Function to normalize spaces (replace multiple whitespace with single space and trim)
+# Outputs $1 with all contiguous white-space subsequences replaced with a single space,
+# trimming at start and end.
 normalize_spaces() {
     echo "$1" | sed 's/[[:space:]]\+/ /g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
+# Outputs $1 with any MSVC-style library paths replaced with -l flags.
+#
 # On Windows, llvm-config --libs outputs full paths (e.g. C:\path\LLVMCore.lib)
 # instead of -lLLVMCore. Convert them to -l flags for SPM compatibility.
+#
+# See https://github.com/hylo-lang/llvm-build/pull/36
 convert_libs_to_flags() {
     local input="$1"
     local operating_system
