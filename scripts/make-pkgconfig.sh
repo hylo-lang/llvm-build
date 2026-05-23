@@ -8,12 +8,16 @@ filename=$1
 mkdir -p $(dirname $filename)
 touch $filename
 
-# Function to normalize path separators (replace backslashes with forward slashes)
+# Outputs $1 with normalized path separators.
+#
+# Replaces backslashes with forward slashes.
 normalize_path_separators() {
     echo "$1" | sed 's/\\/\//g'
 }
 
-# Function to replace absolute paths with relocatable paths
+# Outputs $1 with absolute paths replaced by relocatable paths.
+#
+# Occurrences of the package prefix are replaced by "${pcfiledir}/../".
 replace_with_relocatable_paths() {
     local input=$(normalize_path_separators "$1")
     local llvm_root=$(normalize_path_separators "$(llvm-config --prefix)")
@@ -27,14 +31,32 @@ replace_with_relocatable_paths() {
     echo "$input" | sed "s|${llvm_root}|\${pcfiledir}/../|g"
 }
 
-# Function to normalize spaces (replace multiple whitespace with single space and trim)
+# Outputs $1 with all contiguous white-space subsequences replaced by a single space,
+# trimming at start and end.
 normalize_spaces() {
     echo "$1" | sed 's/[[:space:]]\+/ /g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
+# Outputs $1 with any MSVC-style library paths replaced with -l flags if the script is run on Windows.
+#
+# On Windows, llvm-config --libs outputs full paths (e.g. C:\path\LLVMCore.lib)
+# instead of -lLLVMCore. Convert them to -l flags for SPM compatibility.
+#
+# See https://github.com/hylo-lang/llvm-build/pull/36
+convert_libs_to_spm_compatible_flags() {
+    local operating_system
+    operating_system="$(uname -s)"
+    if [[ "$operating_system" == MINGW* || "$operating_system" == MSYS* || "$operating_system" == CYGWIN* ]]; then
+        echo "$1" | sed -E 's/[^[:space:]]*?([^\\/\\[:space:]]+)\.lib/-l\1/gm;t'
+    else
+        echo "$1"
+    fi
 }
 
 # Get libraries
 absolute_libdir=$(normalize_spaces "$(llvm-config --libdir)")
 system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis bitwriter passes target all-targets)")
+system_libs=$(convert_libs_to_spm_compatible_flags "$system_libs")
 lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
 
 # Get CXX flags
