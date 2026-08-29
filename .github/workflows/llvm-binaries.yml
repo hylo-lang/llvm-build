@@ -70,7 +70,7 @@ jobs:
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
-          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
+          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
           - zstd_root_option:
 
           # Overrides

@@ -22,8 +22,9 @@ $fileContent = Get-Content -Path $llvmExportsPath -Raw
 $newContent = [regex]::Replace($fileContent, $vsPathPattern, '$ENV{VSINSTALLDIR}/')
 
 if ($fileContent -eq $newContent) {
-    Write-Output "No replacements were made in $llvmExportsPath."
-    exit 1
+    # Since LLVM 23, LLVMExports.cmake no longer embeds the VS install path,
+    # so having nothing to patch is the expected outcome.
+    Write-Output "No hardcoded VS paths found in $llvmExportsPath; nothing to patch."
 } else {
     Set-Content -Path $llvmExportsPath -Value $newContent
     Write-Output "Patched $llvmExportsPath to use $ENV{VSINSTALLDIR} instead of hardcoded VS path."
