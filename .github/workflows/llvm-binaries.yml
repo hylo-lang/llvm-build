@@ -90,9 +90,7 @@ jobs:
             cxx_compiler: cl
             executable_suffix: .exe
             # The Debug package exceeds GitHub's 2 GiB release asset limit at
-            # zstd's default level 3 (2.28 GiB), so compress harder (bsdtar
-            # syntax). Level 9 lands around 90% of the limit; level 19 would
-            # buy another ~15% but takes ~55 minutes single-threaded.
+            # zstd's default level, so compress harder.
             package_command: tar --options zstd:compression-level=9,zstd:threads=0 --zstd -cf
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
