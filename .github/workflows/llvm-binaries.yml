@@ -342,13 +342,6 @@ jobs:
             dwarfdump --debug-info=0x0 "$SAMPLE_LIB" 2>&1 | head -10 || true
           fi
 
-      - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ runner.os == 'Windows' }}
-        shell: pwsh
-        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
-        run: |
-          pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
-
       - name: Test binary compatibility
         shell: bash
         run: |
