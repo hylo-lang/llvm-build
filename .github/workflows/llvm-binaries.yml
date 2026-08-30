@@ -27,7 +27,7 @@ jobs:
       tag_name: ${{ steps.timestamp.outputs.time }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         show-progress: false
 
@@ -201,7 +201,7 @@ jobs:
         with:
           xcode-version: '26.0.1'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: ./SourceCache/llvm-build
           show-progress: false
@@ -219,7 +219,7 @@ jobs:
 
       - name: Setup sccache
         id: sccache
-        uses: hendrikmuhs/ccache-action@v1.2.20
+        uses: hendrikmuhs/ccache-action@v1.2.23
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
@@ -383,7 +383,7 @@ jobs:
           ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
           tag_name: ${{ needs.create_tag.outputs.tag_name }}
