@@ -27,18 +27,18 @@ jobs:
       tag_name: ${{ steps.timestamp.outputs.time }}
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         show-progress: false
 
     - name: Capture time
-      uses: Kaven-Universe/github-action-current-date-time@v1
+      uses: Kaven-Universe/github-action-current-date-time@7c1d8465d1bfd7d35466d2ee82a8e460780561ae # v1.5.0
       id: timestamp
       with:
         format: "YYYYMMDD-HHmmss"
 
     - name: Create the tag.
-      uses: EndBug/latest-tag@latest
+      uses: EndBug/latest-tag@8fcae8848c1e23fd8212258f69a9619bc62cad67 # v1.6.3
       with:
         ref: ${{ steps.timestamp.outputs.time }}
 
@@ -196,12 +196,12 @@ jobs:
           df -h
 
       - name: Set up specific Xcode version
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         if: ${{ runner.os == 'macOS' }}
         with:
           xcode-version: '26.0.1'
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ./SourceCache/llvm-build
           show-progress: false
@@ -212,21 +212,21 @@ jobs:
           llvm_version: ${{ env.llvm_version }}
 
       - name: Install CMake and Ninja
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # v4.4.2
         with:
           ninjaVersion: 1.13.2
           cmakeVersion: 4.2.0
 
       - name: Setup sccache
         id: sccache
-        uses: hendrikmuhs/ccache-action@v1.2.23
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
 
-      - uses: compnerd/gha-setup-vsdevenv@main
+      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
@@ -383,7 +383,7 @@ jobs:
           ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
 
       - name: Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
           tag_name: ${{ needs.create_tag.outputs.tag_name }}
