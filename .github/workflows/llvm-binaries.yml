@@ -71,7 +71,6 @@ jobs:
           - triple_cpu:
           - install_target: install-distribution-stripped
           - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
-          - zstd_root_option:
 
           # Overrides
           - configuration: Debug
@@ -107,11 +106,6 @@ jobs:
             os: ubuntu-24.04
 
             triple_cpu: aarch64
-
-          - arch: arm64
-            os: macos-15
-
-            zstd_root_option: -D zstd_ROOT=/opt/local
 
           # macOS debug symbol compatibility fixes
           - os: macos-15
@@ -245,9 +239,19 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
-      - name: Install prerequisites (macOS)
+      - name: Install zstd (macOS)
         if: ${{ runner.os == 'macOS' }}
-        run: brew install zstd
+        run: |
+          brew install zstd
+          echo "zstd_ROOT=$(brew --prefix zstd)" >> $GITHUB_ENV
+
+      - name: Install zstd (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          # `md` corresponds to CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL.
+          $triplet = "$($env:RUNNER_ARCH.ToLower())-windows-static-md" 
+          vcpkg install zstd:$triplet
+          echo "zstd_ROOT=$env:VCPKG_INSTALLATION_ROOT/installed/$triplet" >> $env:GITHUB_ENV
 
       - name: Configure LLVM
         run: >-
@@ -275,7 +279,6 @@ jobs:
           -D LLVM_ENABLE_PROJECTS="lld"
           -D LLVM_PARALLEL_LINK_JOBS=2
           -D LLVM_VERSION_SUFFIX=""
-          ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
