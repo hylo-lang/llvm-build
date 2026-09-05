@@ -8,7 +8,7 @@ runs:
   using: 'composite'
   steps:
     - name: Cache built tools
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       id: cache-built-tools
       with:
         path: |
@@ -19,7 +19,7 @@ runs:
           build-tools-${{ runner.os }}-${{ runner.arch }}-
 
     - name: Checkout LLVM sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       if: steps.cache-built-tools.outputs.cache-hit != 'true'
       with:
         repository: llvm/llvm-project
@@ -28,7 +28,7 @@ runs:
         show-progress: false
 
     - name: Install CMake and Ninja
-      uses: lukka/get-cmake@latest
+      uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # v4.4.2
       with:
         ninjaVersion: 1.13.2
         cmakeVersion: 4.2.0

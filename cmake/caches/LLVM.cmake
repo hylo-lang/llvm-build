@@ -3,6 +3,7 @@
 set(LLVM_ENABLE_ASSERTIONS YES CACHE BOOL "")
 
 set(ENABLE_X86_RELAX_RELOCATIONS YES CACHE BOOL "")
+set(LLVM_ENABLE_ZSTD NO CACHE BOOL "")
 
 set(LLVM_APPEND_VC_REV NO CACHE BOOL "")
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR YES CACHE BOOL "")
@@ -46,7 +47,6 @@ set(LLVM_TOOLCHAIN_TOOLS
   llvm-dwp
   llvm-lib
   llvm-lipo
-  llvm-mt
   llvm-nm
   llvm-objcopy
   llvm-objdump
