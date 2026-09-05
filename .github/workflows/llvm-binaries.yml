@@ -239,23 +239,6 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
-      - name: Install zstd (macOS)
-        if: ${{ runner.os == 'macOS' }}
-        run: |
-          brew install zstd
-          echo "zstd_ROOT=$(brew --prefix zstd)" >> $GITHUB_ENV
-
-      - name: Install zstd (Windows)
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          # `md` corresponds to CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL.
-          $triplet = "$($env:RUNNER_ARCH.ToLower())-windows-static-md" 
-          vcpkg install zstd:$triplet
-          $root = "$env:VCPKG_INSTALLATION_ROOT/installed/$triplet"
-          # LLVM's Findzstd.cmake requires a `_static.lib` suffix.
-          Rename-Item "$root/lib/zstd.lib" zstd_static.lib
-          echo "zstd_ROOT=$root" >> $env:GITHUB_ENV
-
       - name: Configure LLVM
         run: >-
           cmake -GNinja
