@@ -39,15 +39,16 @@ normalize_spaces() {
 
 # Outputs $1 with any MSVC-style library paths replaced with -l flags if the script is run on Windows.
 #
-# On Windows, llvm-config --libs outputs full paths (e.g. C:\path\LLVMCore.lib)
-# instead of -lLLVMCore. Convert them to -l flags for SPM compatibility.
+# On Windows, llvm-config --libs outputs full paths (e.g. C:\path\LLVMCore.lib) and --system-libs
+# outputs bare file names (e.g. psapi.lib). Convert both to -l flags for SPM compatibility.
 #
 # See https://github.com/hylo-lang/llvm-build/pull/36
 convert_libs_to_spm_compatible_flags() {
     local operating_system
     operating_system="$(uname -s)"
     if [[ "$operating_system" == MINGW* || "$operating_system" == MSYS* || "$operating_system" == CYGWIN* ]]; then
-        echo "$1" | sed -E 's/[^[:space:]]*?([^\\/\\[:space:]]+)\.lib/-l\1/gm;t'
+        # Group 1 is the optional directory, ending in the last path separator; group 2 is the stem.
+        echo "$1" | sed -E 's#([^[:space:]]*[\\/])?([^[:space:]\\/]+)\.lib#-l\2#g'
     else
         echo "$1"
     fi
