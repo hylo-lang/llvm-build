@@ -13,12 +13,12 @@ on:
       llvm_version:
         description: 'LLVM Version'
         required: true
-        default: '20.1.6'
+        default: '23.1.0'
         type: string
 
 env:
   SCCACHE_DIRECT: true
-  llvm_version: ${{ github.event.inputs.llvm_version }}
+  llvm_version: ${{ github.event.inputs.llvm_version || '23.1.0' }}
 
 jobs:
   create_tag:
@@ -27,18 +27,18 @@ jobs:
       tag_name: ${{ steps.timestamp.outputs.time }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         show-progress: false
 
     - name: Capture time
-      uses: Kaven-Universe/github-action-current-date-time@v1
+      uses: Kaven-Universe/github-action-current-date-time@7c1d8465d1bfd7d35466d2ee82a8e460780561ae # v1.5.0
       id: timestamp
       with:
         format: "YYYYMMDD-HHmmss"
 
     - name: Create the tag.
-      uses: EndBug/latest-tag@latest
+      uses: EndBug/latest-tag@8fcae8848c1e23fd8212258f69a9619bc62cad67 # v1.6.3
       with:
         ref: ${{ steps.timestamp.outputs.time }}
 
@@ -70,8 +70,7 @@ jobs:
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
-          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-mt;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
-          - zstd_root_option:
+          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
 
           # Overrides
           - configuration: Debug
@@ -89,6 +88,9 @@ jobs:
             cmake_msvc_options: -D CMAKE_CXX_FLAGS=-D_ITERATOR_DEBUG_LEVEL=0 -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
             cxx_compiler: cl
             executable_suffix: .exe
+            # The Debug package exceeds GitHub's 2 GiB release asset limit at
+            # zstd's default level, so compress harder.
+            package_command: tar --options zstd:compression-level=9,zstd:threads=0 --zstd -cf
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
@@ -104,11 +106,6 @@ jobs:
             os: ubuntu-24.04
 
             triple_cpu: aarch64
-
-          - arch: arm64
-            os: macos-15
-
-            zstd_root_option: -D zstd_ROOT=/opt/local
 
           # macOS debug symbol compatibility fixes
           - os: macos-15
@@ -193,12 +190,12 @@ jobs:
           df -h
 
       - name: Set up specific Xcode version
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         if: ${{ runner.os == 'macOS' }}
         with:
           xcode-version: '26.0.1'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ./SourceCache/llvm-build
           show-progress: false
@@ -209,21 +206,21 @@ jobs:
           llvm_version: ${{ env.llvm_version }}
 
       - name: Install CMake and Ninja
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # v4.4.2
         with:
           ninjaVersion: 1.13.2
           cmakeVersion: 4.2.0
 
       - name: Setup sccache
         id: sccache
-        uses: hendrikmuhs/ccache-action@v1.2.20
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           max-size: ${{ matrix.compile_cache_max_size }}
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
 
-      - uses: compnerd/gha-setup-vsdevenv@main
+      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
@@ -242,10 +239,6 @@ jobs:
             COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
           "@
 
-      - name: Install prerequisites (macOS)
-        if: ${{ runner.os == 'macOS' }}
-        run: brew install zstd
-
       - name: Configure LLVM
         run: >-
           cmake -GNinja
@@ -262,7 +255,7 @@ jobs:
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ matrix.cmake_msvc_options }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMX86TargetMCA;LLVMRISCVTargetMCA;LLVMAMDGPUTargetMCA;LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMAggressiveInstCombine;LLVMAMDGPUAsmParser;LLVMAMDGPUCodeGen;LLVMAMDGPUDesc;LLVMAMDGPUDisassembler;LLVMAMDGPUInfo;LLVMAMDGPUUtils;LLVMAnalysis;LLVMARMAsmParser;LLVMARMCodeGen;LLVMARMDesc;LLVMARMDisassembler;LLVMARMInfo;LLVMARMUtils;LLVMAsmParser;LLVMAsmPrinter;LLVMAVRAsmParser;LLVMAVRCodeGen;LLVMAVRDesc;LLVMAVRDisassembler;LLVMAVRInfo;LLVMBinaryFormat;LLVMBitReader;LLVMBitstreamReader;LLVMBitWriter;LLVMBPFAsmParser;LLVMBPFCodeGen;LLVMBPFDesc;LLVMBPFDisassembler;LLVMBPFInfo;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHexagonAsmParser;LLVMHexagonCodeGen;LLVMHexagonDesc;LLVMHexagonDisassembler;LLVMHexagonInfo;LLVMHipStdPar;LLVMInstCombine;LLVMInstrumentation;LLVMipo;LLVMIRPrinter;LLVMIRReader;LLVMLanaiAsmParser;LLVMLanaiCodeGen;LLVMLanaiDesc;LLVMLanaiDisassembler;LLVMLanaiInfo;LLVMLinker;LLVMLoongArchAsmParser;LLVMLoongArchCodeGen;LLVMLoongArchDesc;LLVMLoongArchDisassembler;LLVMLoongArchInfo;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMMipsAsmParser;LLVMMipsCodeGen;LLVMMipsDesc;LLVMMipsDisassembler;LLVMMipsInfo;LLVMMIRParser;LLVMMSP430AsmParser;LLVMMSP430CodeGen;LLVMMSP430Desc;LLVMMSP430Disassembler;LLVMMSP430Info;LLVMNVPTXCodeGen;LLVMNVPTXDesc;LLVMNVPTXInfo;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMPowerPCAsmParser;LLVMPowerPCCodeGen;LLVMPowerPCDesc;LLVMPowerPCDisassembler;LLVMPowerPCInfo;LLVMProfileData;LLVMRemarks;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSparcAsmParser;LLVMSparcCodeGen;LLVMSparcDesc;LLVMSparcDisassembler;LLVMSparcInfo;LLVMSPIRVAnalysis;LLVMSPIRVCodeGen;LLVMSPIRVDesc;LLVMSPIRVInfo;LLVMSupport;LLVMSymbolize;LLVMSystemZAsmParser;LLVMSystemZCodeGen;LLVMSystemZDesc;LLVMSystemZDisassembler;LLVMSystemZInfo;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVEAsmParser;LLVMVECodeGen;LLVMVectorize;LLVMVEDesc;LLVMVEDisassembler;LLVMVEInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils;LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMXCoreCodeGen;LLVMXCoreDesc;LLVMXCoreDisassembler;LLVMXCoreInfo;cmake-exports;lld-cmake-exports;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
+          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMX86TargetMCA;LLVMRISCVTargetMCA;LLVMAMDGPUTargetMCA;LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMAggressiveInstCombine;LLVMAMDGPUAsmParser;LLVMAMDGPUCodeGen;LLVMAMDGPUDesc;LLVMAMDGPUDisassembler;LLVMAMDGPUInfo;LLVMAMDGPUUtils;LLVMAnalysis;LLVMARMAsmParser;LLVMARMCodeGen;LLVMARMDesc;LLVMARMDisassembler;LLVMARMInfo;LLVMARMUtils;LLVMAsmParser;LLVMAsmPrinter;LLVMAVRAsmParser;LLVMAVRCodeGen;LLVMAVRDesc;LLVMAVRDisassembler;LLVMAVRInfo;LLVMBinaryFormat;LLVMBitReader;LLVMBitstreamReader;LLVMBitWriter;LLVMBPFAsmParser;LLVMBPFCodeGen;LLVMBPFDesc;LLVMBPFDisassembler;LLVMBPFInfo;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoDWARFLowLevel;LLVMDebugInfoGSYM;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendDirective;LLVMFrontendHLSL;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHexagonAsmParser;LLVMHexagonCodeGen;LLVMHexagonDesc;LLVMHexagonDisassembler;LLVMHexagonInfo;LLVMHipStdPar;LLVMInstCombine;LLVMInstrumentation;LLVMipo;LLVMIRPrinter;LLVMIRReader;LLVMLanaiAsmParser;LLVMLanaiCodeGen;LLVMLanaiDesc;LLVMLanaiDisassembler;LLVMLanaiInfo;LLVMLinker;LLVMLoongArchAsmParser;LLVMLoongArchCodeGen;LLVMLoongArchDesc;LLVMLoongArchDisassembler;LLVMLoongArchInfo;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMMipsAsmParser;LLVMMipsCodeGen;LLVMMipsDesc;LLVMMipsDisassembler;LLVMMipsInfo;LLVMMIRParser;LLVMMSP430AsmParser;LLVMMSP430CodeGen;LLVMMSP430Desc;LLVMMSP430Disassembler;LLVMMSP430Info;LLVMNVPTXCodeGen;LLVMNVPTXDesc;LLVMNVPTXInfo;LLVMObjCARCOpts;LLVMObject;LLVMObjectYAML;LLVMPasses;LLVMPowerPCAsmParser;LLVMPowerPCCodeGen;LLVMPowerPCDesc;LLVMPowerPCDisassembler;LLVMPowerPCInfo;LLVMProfileData;LLVMRemarks;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSparcAsmParser;LLVMSparcCodeGen;LLVMSparcDesc;LLVMSparcDisassembler;LLVMSparcInfo;LLVMSPIRVAnalysis;LLVMSPIRVCodeGen;LLVMSPIRVDesc;LLVMSPIRVInfo;LLVMSupport;LLVMSymbolize;LLVMSystemZAsmParser;LLVMSystemZCodeGen;LLVMSystemZDesc;LLVMSystemZDisassembler;LLVMSystemZInfo;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVEAsmParser;LLVMVECodeGen;LLVMVectorize;LLVMVEDesc;LLVMVEDisassembler;LLVMVEInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils;LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMXCoreCodeGen;LLVMXCoreDesc;LLVMXCoreDisassembler;LLVMXCoreInfo;cmake-exports;lld-cmake-exports;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoDWARFLowLevel;LLVMDebugInfoGSYM;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendDirective;LLVMFrontendHLSL;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMObjectYAML;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
@@ -272,7 +265,6 @@ jobs:
           -D LLVM_ENABLE_PROJECTS="lld"
           -D LLVM_PARALLEL_LINK_JOBS=2
           -D LLVM_VERSION_SUFFIX=""
-          ${{ matrix.zstd_root_option }}
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
@@ -339,13 +331,6 @@ jobs:
             dwarfdump --debug-info=0x0 "$SAMPLE_LIB" 2>&1 | head -10 || true
           fi
 
-      - name: Patch VS path in LLVMExports.cmake (Windows only)
-        if: ${{ runner.os == 'Windows' }}
-        shell: pwsh
-        working-directory: ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
-        run: |
-          pwsh -File ${{ github.workspace }}/SourceCache/llvm-build/scripts/fix-vs.ps1
-
       - name: Test binary compatibility
         shell: bash
         run: |
@@ -387,7 +372,7 @@ jobs:
           ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
           tag_name: ${{ needs.create_tag.outputs.tag_name }}
