@@ -1,13 +1,6 @@
 name: build-llvm-binaries
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - "**.md"
-      - "LICENSE"
-      - ".gitignore"
-
   workflow_dispatch:
     inputs:
       llvm_version:
@@ -18,7 +11,7 @@ on:
 
 env:
   SCCACHE_DIRECT: true
-  llvm_version: ${{ github.event.inputs.llvm_version || '23.1.0' }}
+  llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
   create_tag:
