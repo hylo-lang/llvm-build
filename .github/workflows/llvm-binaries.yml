@@ -144,7 +144,7 @@ jobs:
 
           - os: windows-2025
             arch: x86_64
-            runner: windows-2025
+            runner: windows-2022
 
           - os: windows-2025
             arch: arm64
