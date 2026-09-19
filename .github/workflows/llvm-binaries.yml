@@ -210,6 +210,29 @@ jobs:
         with:
           winsdk: "10.0.22621.0"
 
+      - name: Verify Windows toolchain matches the package triple
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sdk  = $env:WindowsSDKVersion.TrimEnd('\')
+          $ucrt = $env:UCRTVersion
+          $msvc = Split-Path -Leaf $env:VCToolsInstallDir.TrimEnd('\')
+          Write-Host "MSVC $msvc, Windows SDK $sdk, UCRT $ucrt"
+
+          # The packages are published as *-unknown-windows-msvc17 and are meant to
+          # link against a stock Swift install, which swift.org provisions as VS 2022
+          # (MSVC 14.4x) with Windows SDK 10.0.22621. Fail before the hour-long build
+          # rather than ship libraries built against a newer toolchain.
+          $problems = @()
+          if ($sdk -ne '10.0.22621.0')  { $problems += "WindowsSDKVersion is $sdk, expected 10.0.22621.0" }
+          if ($ucrt -ne '10.0.22621.0') { $problems += "UCRTVersion is $ucrt, expected 10.0.22621.0" }
+          if ($msvc -notlike '14.44.*') { $problems += "MSVC toolset is $msvc, expected 14.44.x (VS 2022)" }
+
+          if ($problems) {
+            $problems | ForEach-Object { Write-Host "::error::$_" }
+            exit 1
+          }
+
       - name: Setup sccache
         id: sccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
