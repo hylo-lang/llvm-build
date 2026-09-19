@@ -204,6 +204,12 @@ jobs:
           ninjaVersion: 1.13.2
           cmakeVersion: 4.2.0
 
+      - name: Download Old Enough Visual Studio and Windows SDK
+        uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
+        if: runner.os == 'Windows'
+        with:
+          winsdk: "10.0.22621.0"
+
       - name: Setup sccache
         id: sccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
@@ -212,8 +218,6 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
-
-      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
