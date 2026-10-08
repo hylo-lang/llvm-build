@@ -170,23 +170,6 @@ jobs:
 
       - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
 
-      - name: Workaround MSVC#10444970
-        if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
-        run: |
-          $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
-          Set-Content $clangTooling @"
-          $(Get-Content -Raw $clangTooling)
-          set_source_files_properties(StandardLibrary.cpp PROPERTIES
-            COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
-          "@
-
-          $clangCodeGen = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/CodeGen/CMakeLists.txt"
-          Set-Content $clangCodeGen @"
-          $(Get-Content -Raw $clangCodeGen)
-          set_source_files_properties(CGBuiltin.cpp PROPERTIES
-            COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
-          "@
-
       - name: Configure LLVM
         run: >-
           cmake -GNinja
