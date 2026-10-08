@@ -153,9 +153,9 @@ jobs:
         with:
           xcode-version: '26.0.1'
 
-      # Swift on Windows uses MSVC 14.44 and Windows SDK 10.0.22621.0, so the packages must not need
-      # anything newer. The images come with Visual Studio 2026, which has the 14.44 toolset, but not
-      # always the SDK.
+      # Swift on Windows uses MSVC 14.44 and Windows SDK 10.0.22621.0. Visual Studio 2026 on the images
+      # defaults to newer ones (MSVC 14.51, SDK 10.0.26100.0), and libraries built with those would
+      # need them in every consumer too. windows-2025 only has the newer SDK, so 22621 is installed.
       - name: Install Windows SDK 10.0.22621.0
         if: runner.os == 'Windows'
         shell: pwsh
