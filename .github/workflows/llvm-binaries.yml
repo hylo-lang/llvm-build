@@ -8,36 +8,18 @@ on:
         required: true
         default: '23.1.0'
         type: string
+      release:
+        description: 'Publish a release when every build succeeds'
+        required: false
+        default: true
+        type: boolean
 
 env:
   SCCACHE_DIRECT: true
   llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
-  create_tag:
-    runs-on: ubuntu-24.04
-    outputs:
-      tag_name: ${{ steps.timestamp.outputs.time }}
-
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        show-progress: false
-
-    - name: Capture time
-      uses: Kaven-Universe/github-action-current-date-time@7c1d8465d1bfd7d35466d2ee82a8e460780561ae # v1.5.0
-      id: timestamp
-      with:
-        format: "YYYYMMDD-HHmmss"
-
-    - name: Create the tag.
-      uses: EndBug/latest-tag@8fcae8848c1e23fd8212258f69a9619bc62cad67 # v1.6.3
-      with:
-        ref: ${{ steps.timestamp.outputs.time }}
-
   distribution:
-    needs: [create_tag]
-
     strategy:
       fail-fast: false
 
@@ -307,11 +289,15 @@ jobs:
 
           ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
 
-      - name: Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+      - name: Upload package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
-          tag_name: ${{ needs.create_tag.outputs.tag_name }}
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
+          if-no-files-found: error
+          # Already compressed.
+          compression-level: 0
+          retention-days: 3
 
       - name: Clear old sccache
         shell: bash
@@ -321,3 +307,36 @@ jobs:
           gh extension install actions/gh-actions-cache
           gh actions-cache delete sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package- --confirm -R ${{ github.repository }}
         continue-on-error: true
+
+  # Release everything at once, so that a failed run doesn't leave a partial release behind.
+  release:
+    needs: [distribution]
+    if: inputs.release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: packages
+          merge-multiple: true
+
+      - name: Choose the tag
+        id: tag
+        run: echo "name=$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          draft: true
+          files: packages/*
+          fail_on_unmatched_files: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ steps.tag.outputs.name }}" --draft=false --repo "${{ github.repository }}"
