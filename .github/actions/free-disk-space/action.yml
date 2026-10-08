@@ -1,16 +1,30 @@
 name: 'Free disk space'
 description: 'Removes preinstalled software that LLVM builds do not use from Linux runners'
+# 14GB of space should be available but we still run out.
+# https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
 runs:
   using: 'composite'
   steps:
-    # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
     - if: runner.os == 'Linux'
       shell: bash
       run: |
         df -h /
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-          /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" /usr/local/lib/node_modules /usr/share/swift \
-          /usr/local/lib/heroku /usr/lib/jvm /usr/local/share/powershell /usr/local/share/chromium \
-          /usr/share/miniconda /usr/local/share/vcpkg /usr/share/doc /usr/share/man
+        sudo rm -rf \
+          /usr/share/dotnet \
+          /usr/local/lib/android \
+          /opt/ghc \
+          /usr/local/.ghcup \
+          /usr/local/share/boost \
+          "$AGENT_TOOLSDIRECTORY" \
+          /usr/local/lib/node_modules \
+          /usr/share/swift \
+          /usr/local/lib/heroku \
+          /usr/lib/jvm \
+          /usr/local/share/powershell \
+          /usr/local/share/chromium \
+          /usr/share/miniconda \
+          /usr/local/share/vcpkg \
+          /usr/share/doc \
+          /usr/share/man
         sudo docker image prune --all --force > /dev/null
         df -h /
