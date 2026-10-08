@@ -68,6 +68,16 @@ Installing rewrites `${pcfiledir}` to an absolute path, because the installed co
 next to the LLVM build. That means the installed `llvm.pc` is not relocatable: if you move or delete 
 the unpacked build, re-run `install-pc.sh`.
 
+## Build configuration
+
+The CMake configuration is in [`cmake/caches/`](cmake/caches); the workflow only adds
+platform-specific options. To build roughly what CI builds:
+
+```sh
+cmake -G Ninja -S llvm-project/llvm -B build -C cmake/caches/LLVM-MinSizeRel.cmake
+cmake --build build --target install-distribution-stripped
+```
+
 ## Scripts
 
 The [`scripts/`](scripts) folder contains scripts that are useful either during the release workflow

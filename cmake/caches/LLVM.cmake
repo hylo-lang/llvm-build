@@ -30,46 +30,178 @@ set(LLVM_TOOL_GOLD_BUILD NO CACHE BOOL "")
 set(LLVM_TOOL_LLVM_SHLIB_BUILD NO CACHE BOOL "")
 
 set(LLVM_INSTALL_BINUTILS_SYMLINKS YES CACHE BOOL "")
-set(LLVM_INSTALL_TOOLCHAIN_ONLY NO CACHE BOOL "")
-set(LLVM_TOOLCHAIN_TOOLS
-  addr2line
-  ar
-  c++filt
-  dsymutil
-  dwp
-  # lipo
-  llvm-ar
-  llvm-cov
-  llvm-cvtres
-  llvm-cxxfilt
-  llvm-dlltool
-  llvm-dwarfdump
-  llvm-dwp
-  llvm-lib
-  llvm-lipo
-  llvm-nm
-  llvm-objcopy
-  llvm-objdump
-  llvm-pdbutil
-  llvm-profdata
-  llvm-ranlib
-  llvm-rc
-  llvm-readelf
-  llvm-readobj
-  llvm-size
-  llvm-strings
-  llvm-strip
-  llvm-symbolizer
-  llvm-undname
-  nm
-  objcopy
-  objdump
-  ranlib
-  readelf
-  size
-  strings
-  CACHE STRING "")
 
-set(LLD_TOOLS
-      lld
-    CACHE STRING "")
+set(LLVM_ENABLE_PROJECTS lld CACHE STRING "")
+set(LLVM_USE_HOST_TOOLS NO CACHE BOOL "")
+set(LLVM_PARALLEL_LINK_JOBS 2 CACHE STRING "")
+set(LLVM_VERSION_SUFFIX "" CACHE STRING "")
+set(PACKAGE_VENDOR hylo-lang.org CACHE STRING "")
+
+# The libraries llvm.pc links (see scripts/make-pkgconfig.sh). After an LLVM upgrade, regenerate
+# the list with
+#   llvm-config --libnames core analysis bitwriter passes target all-targets
+set(HYLO_LLVM_DISTRIBUTION_LIBRARIES
+  LLVMAArch64AsmParser
+  LLVMAArch64CodeGen
+  LLVMAArch64Desc
+  LLVMAArch64Disassembler
+  LLVMAArch64Info
+  LLVMAArch64Utils
+  LLVMAMDGPUAsmParser
+  LLVMAMDGPUCodeGen
+  LLVMAMDGPUDesc
+  LLVMAMDGPUDisassembler
+  LLVMAMDGPUInfo
+  LLVMAMDGPUTargetMCA
+  LLVMAMDGPUUtils
+  LLVMARMAsmParser
+  LLVMARMCodeGen
+  LLVMARMDesc
+  LLVMARMDisassembler
+  LLVMARMInfo
+  LLVMARMUtils
+  LLVMAVRAsmParser
+  LLVMAVRCodeGen
+  LLVMAVRDesc
+  LLVMAVRDisassembler
+  LLVMAVRInfo
+  LLVMAggressiveInstCombine
+  LLVMAnalysis
+  LLVMAsmParser
+  LLVMAsmPrinter
+  LLVMBPFAsmParser
+  LLVMBPFCodeGen
+  LLVMBPFDesc
+  LLVMBPFDisassembler
+  LLVMBPFInfo
+  LLVMBinaryFormat
+  LLVMBitReader
+  LLVMBitWriter
+  LLVMBitstreamReader
+  LLVMCFGuard
+  LLVMCGData
+  LLVMCodeGen
+  LLVMCodeGenTypes
+  LLVMCore
+  LLVMCoroutines
+  LLVMDebugInfoBTF
+  LLVMDebugInfoCodeView
+  LLVMDebugInfoDWARF
+  LLVMDebugInfoDWARFLowLevel
+  LLVMDebugInfoGSYM
+  LLVMDebugInfoMSF
+  LLVMDebugInfoPDB
+  LLVMDemangle
+  LLVMFrontendAtomic
+  LLVMFrontendDirective
+  LLVMFrontendHLSL
+  LLVMFrontendOffloading
+  LLVMFrontendOpenMP
+  LLVMGlobalISel
+  LLVMHexagonAsmParser
+  LLVMHexagonCodeGen
+  LLVMHexagonDesc
+  LLVMHexagonDisassembler
+  LLVMHexagonInfo
+  LLVMHipStdPar
+  LLVMIRPrinter
+  LLVMIRReader
+  LLVMInstCombine
+  LLVMInstrumentation
+  LLVMLanaiAsmParser
+  LLVMLanaiCodeGen
+  LLVMLanaiDesc
+  LLVMLanaiDisassembler
+  LLVMLanaiInfo
+  LLVMLinker
+  LLVMLoongArchAsmParser
+  LLVMLoongArchCodeGen
+  LLVMLoongArchDesc
+  LLVMLoongArchDisassembler
+  LLVMLoongArchInfo
+  LLVMMC
+  LLVMMCA
+  LLVMMCDisassembler
+  LLVMMCParser
+  LLVMMIRParser
+  LLVMMSP430AsmParser
+  LLVMMSP430CodeGen
+  LLVMMSP430Desc
+  LLVMMSP430Disassembler
+  LLVMMSP430Info
+  LLVMMipsAsmParser
+  LLVMMipsCodeGen
+  LLVMMipsDesc
+  LLVMMipsDisassembler
+  LLVMMipsInfo
+  LLVMNVPTXCodeGen
+  LLVMNVPTXDesc
+  LLVMNVPTXInfo
+  LLVMObjCARCOpts
+  LLVMObject
+  LLVMObjectYAML
+  LLVMPasses
+  LLVMPowerPCAsmParser
+  LLVMPowerPCCodeGen
+  LLVMPowerPCDesc
+  LLVMPowerPCDisassembler
+  LLVMPowerPCInfo
+  LLVMProfileData
+  LLVMRISCVAsmParser
+  LLVMRISCVCodeGen
+  LLVMRISCVDesc
+  LLVMRISCVDisassembler
+  LLVMRISCVInfo
+  LLVMRISCVTargetMCA
+  LLVMRemarks
+  LLVMSPIRVAnalysis
+  LLVMSPIRVCodeGen
+  LLVMSPIRVDesc
+  LLVMSPIRVInfo
+  LLVMSandboxIR
+  LLVMScalarOpts
+  LLVMSelectionDAG
+  LLVMSparcAsmParser
+  LLVMSparcCodeGen
+  LLVMSparcDesc
+  LLVMSparcDisassembler
+  LLVMSparcInfo
+  LLVMSupport
+  LLVMSymbolize
+  LLVMSystemZAsmParser
+  LLVMSystemZCodeGen
+  LLVMSystemZDesc
+  LLVMSystemZDisassembler
+  LLVMSystemZInfo
+  LLVMTarget
+  LLVMTargetParser
+  LLVMTextAPI
+  LLVMTransformUtils
+  LLVMVEAsmParser
+  LLVMVECodeGen
+  LLVMVEDesc
+  LLVMVEDisassembler
+  LLVMVEInfo
+  LLVMVectorize
+  LLVMWebAssemblyAsmParser
+  LLVMWebAssemblyCodeGen
+  LLVMWebAssemblyDesc
+  LLVMWebAssemblyDisassembler
+  LLVMWebAssemblyInfo
+  LLVMWebAssemblyUtils
+  LLVMX86AsmParser
+  LLVMX86CodeGen
+  LLVMX86Desc
+  LLVMX86Disassembler
+  LLVMX86Info
+  LLVMX86TargetMCA
+  LLVMXCoreCodeGen
+  LLVMXCoreDesc
+  LLVMXCoreDisassembler
+  LLVMXCoreInfo
+  LLVMipo)
+
+set(HYLO_LLVM_DISTRIBUTION_SUPPORT
+  llvm-headers
+  cmake-exports
+  lld-cmake-exports)
