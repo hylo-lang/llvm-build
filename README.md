@@ -96,6 +96,8 @@ or upon installation. See each script's in-source documentation header.
   installs a `.pc` file into a `pkg-config` search directory, making its paths
   absolute on the way.
 
+The scripts are tested by [`tests/test-scripts.sh`](tests/test-scripts.sh), which runs on pull requests.
+
 ## Using an existing LLVM build with Swift
 
 You can use a custom LLVM installation instead of our pre-built releases. LLVM

@@ -1,0 +1,41 @@
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          show-progress: false
+
+      - name: ShellCheck
+        run: shellcheck --severity=warning scripts/*.sh tests/*.sh tests/stub-llvm/bin/llvm-config
+
+      - name: actionlint
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
+
+  test-scripts:
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS has BSD sed and Bash 3.2; Windows runs the scripts in Git Bash.
+        runner: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          show-progress: false
+
+      - name: Test scripts against a stub llvm-config
+        shell: bash
+        run: tests/test-scripts.sh
