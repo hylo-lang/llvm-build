@@ -68,11 +68,25 @@ expect_equal "--installed-libraries adds the extra include directories" \
 expect_equal "--installed-libraries writes the given version" \
   "$(grep '^Version:' "$wasm/pkgconfig/llvm.pc")" "Version: 23.1.0"
 
+mkdir -p "$work/msys"
+printf '#!/bin/sh\necho MINGW64_NT-10.0\n' > "$work/msys/uname"
+chmod +x "$work/msys/uname"
+PATH="$work/msys:$prefix/bin:$PATH" STUB_LLVM_WINDOWS=1 "$repository/scripts/make-pkgconfig.sh" "$pc" > /dev/null
+expect_equal "On Windows, .lib paths and names become -l flags" \
+  "$(grep '^Libs:' "$pc")" 'Libs: -L${pcfiledir}/../lib -lLLVMCore -lLLVMSupport -lpsapi -lntdll'
+
 expect_equal "next-release-tag.sh starts at 1" \
   "$("$repository/scripts/next-release-tag.sh" 23.1.0 < /dev/null)" "llvm-23.1.0-1"
 expect_equal "next-release-tag.sh counts numerically, ignoring other versions and tags" \
   "$(printf '%s\n' refs/tags/llvm-23.1.0-9 llvm-23.1.0-10 refs/tags/llvm-23.1.01-50 20260912-184248 \
     | "$repository/scripts/next-release-tag.sh" 23.1.0)" "llvm-23.1.0-11"
+
+swift_bin=$(cd "$repository/tests/stub-swift/bin" && pwd -P)
+expect_equal "swift-wasm-sdk-env.sh finds the toolchain and the SDK" \
+  "$(PATH="$swift_bin:$PATH" "$repository/scripts/swift-wasm-sdk-env.sh" swift-6.3.2-RELEASE_wasm)" \
+  "SWIFT_BIN=$swift_bin
+WASI_SYSROOT=/sdks/wasm/WASI.sdk
+WASI_RESOURCE_DIR=/sdks/wasm/swift.xctoolchain/usr/lib/swift_static/clang"
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures test(s) failed" >&2

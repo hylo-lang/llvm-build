@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Fake llvm-config for tests/test-scripts.sh. The odd whitespace is on purpose.
+# Fake llvm-config for tests/test-scripts.sh. The odd whitespace is on purpose. With
+# STUB_LLVM_WINDOWS set, it prints libraries the way llvm-config does on Windows.
 
 set -euo pipefail
 
@@ -13,6 +14,10 @@ case "$*" in
   --includedir) echo "$prefix/include" ;;
   --cxxflags) echo "-I$prefix/include  -std=c++17   -fno-exceptions -fno-rtti -D_GNU_SOURCE" ;;
   "--system-libs --libs core analysis bitwriter passes target all-targets")
-    printf '%s\n' "-lLLVMCore  -lLLVMSupport" "-lrt -ldl -lm" ;;
+    if [ -n "${STUB_LLVM_WINDOWS:-}" ]; then
+      printf '%s\n' "$prefix\\lib\\LLVMCore.lib $prefix\\lib\\LLVMSupport.lib" "psapi.lib ntdll.lib"
+    else
+      printf '%s\n' "-lLLVMCore  -lLLVMSupport" "-lrt -ldl -lm"
+    fi ;;
   *) echo "llvm-config stub: unexpected arguments: $*" >&2; exit 1 ;;
 esac

@@ -17,7 +17,7 @@ jobs:
           show-progress: false
 
       - name: ShellCheck
-        run: shellcheck --severity=warning scripts/*.sh tests/*.sh tests/stub-llvm/bin/llvm-config
+        run: shellcheck --severity=warning scripts/*.sh tests/*.sh tests/stub-*/bin/*
 
       - name: actionlint
         run: |
