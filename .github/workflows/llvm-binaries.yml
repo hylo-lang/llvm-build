@@ -402,22 +402,21 @@ jobs:
       contents: write
 
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          show-progress: false
+
       - name: Download packages
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: packages
           merge-multiple: true
 
-      # llvm-<version>-<n>, counting up from 1 for each LLVM version.
       - name: Choose the tag
         id: tag
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PREFIX: llvm-${{ inputs.llvm_version }}-
         run: |
-          last=$(gh api --paginate "repos/${{ github.repository }}/git/matching-refs/tags/$PREFIX" --jq '.[].ref' \
-            | sed "s|^refs/tags/$PREFIX||" | grep -E '^[0-9]+$' | sort -n | tail -1 || true)
-          echo "name=$PREFIX$(( ${last:-0} + 1 ))" >> "$GITHUB_OUTPUT"
+          tag=$(git ls-remote --tags --refs origin | cut -f2 | scripts/next-release-tag.sh "$llvm_version")
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Create draft release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3

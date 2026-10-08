@@ -68,6 +68,12 @@ expect_equal "--installed-libraries adds the extra include directories" \
 expect_equal "--installed-libraries writes the given version" \
   "$(grep '^Version:' "$wasm/pkgconfig/llvm.pc")" "Version: 23.1.0"
 
+expect_equal "next-release-tag.sh starts at 1" \
+  "$("$repository/scripts/next-release-tag.sh" 23.1.0 < /dev/null)" "llvm-23.1.0-1"
+expect_equal "next-release-tag.sh counts numerically, ignoring other versions and tags" \
+  "$(printf '%s\n' refs/tags/llvm-23.1.0-9 llvm-23.1.0-10 refs/tags/llvm-23.1.01-50 20260912-184248 \
+    | "$repository/scripts/next-release-tag.sh" 23.1.0)" "llvm-23.1.0-11"
+
 if [ "$failures" -ne 0 ]; then
   echo "$failures test(s) failed" >&2
   exit 1
