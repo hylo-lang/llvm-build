@@ -43,7 +43,8 @@ llvm-23.1.0-x86_64-unknown-linux-gnu-MinSizeRel/
 `Cflags` in `llvm.pc` only has the `-I` flag, since SwiftPM rejects anything else. If you need the
 rest of LLVM's compile flags, get them from `llvm-config --cxxflags`.
 
-`MinSizeRel` builds ship the binutils-style tools (`llvm-ar`, `llvm-nm`, `llvm-objcopy`, `llvm-strip`, ...). To save space, the `Debug` configuration ships only `lld` and `llvm-config`.
+The packages are meant for [Swifty-LLVM](https://github.com/hylo-lang/Swifty-LLVM), so they only
+contain the libraries `llvm.pc` links, plus `llvm-config` and `lld`.
 
 ## Using a prebuilt release
 

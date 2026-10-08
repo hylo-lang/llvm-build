@@ -29,8 +29,6 @@ set(LLVM_INCLUDE_TESTS NO CACHE BOOL "Generate build targets for the LLVM unit t
 set(LLVM_TOOL_GOLD_BUILD NO CACHE BOOL "")
 set(LLVM_TOOL_LLVM_SHLIB_BUILD NO CACHE BOOL "")
 
-set(LLVM_INSTALL_BINUTILS_SYMLINKS YES CACHE BOOL "")
-
 set(LLVM_ENABLE_PROJECTS lld CACHE STRING "")
 set(LLVM_USE_HOST_TOOLS NO CACHE BOOL "")
 set(LLVM_PARALLEL_LINK_JOBS 2 CACHE STRING "")
@@ -205,3 +203,8 @@ set(HYLO_LLVM_DISTRIBUTION_SUPPORT
   llvm-headers
   cmake-exports
   lld-cmake-exports)
+
+# get-llvm and make-pkgconfig.sh use llvm-config.
+set(HYLO_LLVM_DISTRIBUTION_TOOLS
+  lld
+  llvm-config)
