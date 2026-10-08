@@ -38,7 +38,7 @@ jobs:
           - cxx_compiler: clang++
           - executable_suffix:
           - llvm_target_arch_option:
-          - package_command: tar --zstd -cf
+          - zstd_level: 3
           - package_suffix: .tar.zst
           - static_lib_suffix: .a
           - toolset_suffix:
@@ -61,7 +61,7 @@ jobs:
             executable_suffix: .exe
             # The Debug package exceeds GitHub's 2 GiB release asset limit at
             # zstd's default level, so compress harder.
-            package_command: tar --options zstd:compression-level=9,zstd:threads=0 --zstd -cf
+            zstd_level: 9
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
@@ -293,11 +293,12 @@ jobs:
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
 
+      # Don't use the image's tar for zstd: on windows-2022 it hung for hours.
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
-        run: >-
-
-          ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
+        shell: bash
+        timeout-minutes: 30
+        run: tar -cf - "${{ env.PACKAGE_NAME }}" | zstd -T0 -${{ matrix.zstd_level }} -o "${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}"
 
       - name: Upload package
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
