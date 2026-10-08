@@ -8,31 +8,47 @@
 # ".lib" paths and bare ".lib" names that llvm-config emits are rewritten into -l flags, which
 # is what SwiftPM expects; see https://github.com/hylo-lang/llvm-build/pull/36
 #
+# With --installed-libraries, llvm-config isn't used (for a cross-compiled LLVM, it can't run).
+# "Libs:" then lists every lib*.a in the lib directory, in no particular order, and the extra
+# include directories, relative to the prefix, are added to "Cflags:".
+#
 # Parameters:
 #   $1 - The path of the .pc file to write. Parent directories are created as needed.
 #
 # Requires:
 #   - $1 must be in one directory below the LLVM installation prefix.
 #
-# Usage Example:
+# Usage Examples:
 #   export PATH="/path/to/llvm/bin:$PATH"
 #   ./make-pkgconfig.sh "$(llvm-config --prefix)/pkgconfig/llvm.pc"
+#   ./make-pkgconfig.sh --installed-libraries 23.1.0 /path/to/llvm/pkgconfig/llvm.pc libcxx-threads
 
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-    echo "Error: expected 1 argument, got $#" >&2
+usage() {
     echo "Usage: $0 <path-to-pc-file>" >&2
+    echo "       $0 --installed-libraries <version> <path-to-pc-file> [<include-dir>...]" >&2
     exit 1
-fi
+}
 
-if ! command -v llvm-config > /dev/null 2>&1; then
-    echo "Error: 'llvm-config' was not found on PATH" >&2
-    exit 1
-fi
+if [ "${1:-}" = --installed-libraries ]; then
+    [ $# -ge 3 ] || usage
+    from_installed_libraries=true
+    version=$2
+    filename=$3
+    shift 3
+    extra_include_dirs=("$@")
+else
+    [ $# -eq 1 ] || usage
+    from_installed_libraries=false
+    filename=$1
 
-version=$(llvm-config --version)
-filename=$1
+    if ! command -v llvm-config > /dev/null 2>&1; then
+        echo "Error: 'llvm-config' was not found on PATH" >&2
+        exit 1
+    fi
+    version=$(llvm-config --version)
+fi
 
 mkdir -p "$(dirname "$filename")"
 touch "$filename"
@@ -86,15 +102,30 @@ convert_libs_to_spm_compatible_flags() {
     fi
 }
 
-# Get libraries
-absolute_libdir=$(normalize_spaces "$(llvm-config --libdir)")
-system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis bitwriter passes target all-targets)")
-lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
-lib_attributes=$(convert_libs_to_spm_compatible_flags "$lib_attributes")
+if [ "$from_installed_libraries" = true ]; then
+    libdir="$(dirname "$filename")/../lib"
+    lib_attributes="-L\${pcfiledir}/../lib"
+    LC_COLLATE=C # same order in every locale
+    for library in "$libdir"/lib*.a; do
+        [ -e "$library" ] || { echo "Error: no static libraries in $libdir" >&2; exit 1; }
+        name=$(basename "$library" .a)
+        lib_attributes="$lib_attributes -l${name#lib}"
+    done
 
-# SwiftPM only accepts -I flags from pkg-config.
-absolute_includedir=$(normalize_spaces "$(llvm-config --includedir)")
-cflags=$(replace_with_relocatable_paths "-I${absolute_includedir}")
+    cflags="-I\${pcfiledir}/../include"
+    for directory in "${extra_include_dirs[@]+"${extra_include_dirs[@]}"}"; do
+        cflags="$cflags -I\${pcfiledir}/../$directory"
+    done
+else
+    absolute_libdir=$(normalize_spaces "$(llvm-config --libdir)")
+    system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis bitwriter passes target all-targets)")
+    lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
+    lib_attributes=$(convert_libs_to_spm_compatible_flags "$lib_attributes")
+
+    # SwiftPM only accepts -I flags from pkg-config, so --cxxflags is not used.
+    absolute_includedir=$(normalize_spaces "$(llvm-config --includedir)")
+    cflags=$(replace_with_relocatable_paths "-I${absolute_includedir}")
+fi
 
 # Generate pkg-config content
 echo Name: LLVM > "$filename"
