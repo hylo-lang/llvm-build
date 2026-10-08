@@ -33,13 +33,6 @@ runs:
         ninjaVersion: 1.13.2
         cmakeVersion: 4.2.0
 
-    # These tools are host-only build helpers that are thrown away once
-    # llvm-tblgen and llvm-config exist, so they do not need the pinned SDK
-    # that the distribution is built against. Take whatever the image ships.
-    - name: Set up Visual Studio environment
-      uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
-      if: steps.cache-built-tools.outputs.cache-hit != 'true' && runner.os == 'Windows'
-
     # - name: Setup sccache
     #   uses: compnerd/ccache-action@sccache-0.7.4
     #   if: steps.cache-built-tools.outputs.cache-hit != 'true'
