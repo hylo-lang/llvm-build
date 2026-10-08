@@ -19,7 +19,6 @@ env:
   llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
-  # Fail in minutes rather than hours if the scripts are broken.
   checks:
     uses: ./.github/workflows/checks.yml
 
@@ -29,7 +28,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2022, macos-15, ubuntu-24.04]
+        os: [windows-2025, macos-15, ubuntu-24.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -56,7 +55,7 @@ jobs:
             compile_cache_max_size: 2G
             install_target: install-distribution
 
-          - os: windows-2022
+          - os: windows-2025
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
@@ -93,7 +92,7 @@ jobs:
 
           # Extensions
 
-          - os: windows-2022
+          - os: windows-2025
 
             cmake_system_name: Windows
             triple_suffix: unknown-windows-msvc17
@@ -125,12 +124,12 @@ jobs:
             arch: arm64
             runner: macos-15
 
-          - os: windows-2022
+          - os: windows-2025
             arch: x86_64
-            runner: windows-2022
+            runner: windows-2025
 
-          # GitHub has no windows-2022 image for arm64.
-          - os: windows-2022
+          # GitHub has no windows-2025 image for arm64, but windows-11-arm has the same Visual Studio.
+          - os: windows-2025
             arch: arm64
             runner: windows-11-arm
 
@@ -154,7 +153,20 @@ jobs:
         with:
           xcode-version: '26.0.1'
 
-      # The toolset is pinned too, because windows-11-arm defaults to Visual Studio 2026 (MSVC 14.51).
+      # Swift on Windows uses MSVC 14.44 and Windows SDK 10.0.22621.0, so the packages must not need
+      # anything newer. The images come with Visual Studio 2026, which has the 14.44 toolset, but not
+      # always the SDK.
+      - name: Install Windows SDK 10.0.22621.0
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path "${env:ProgramFiles(x86)}\Windows Kits\10\Include\10.0.22621.0\ucrt") { exit 0 }
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+          $vs = & "$installer\vswhere.exe" -latest -products * -property installationPath
+          $p = Start-Process -Wait -PassThru "$installer\setup.exe" -ArgumentList `
+            "modify --installPath `"$vs`" --add Microsoft.VisualStudio.Component.Windows11SDK.22621 --quiet --norestart --nocache"
+          exit $p.ExitCode
+
       - name: Set up MSVC 14.44 with Windows SDK 10.0.22621.0
         uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
         if: runner.os == 'Windows'
