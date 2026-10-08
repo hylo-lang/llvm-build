@@ -113,7 +113,8 @@ or upon installation. See each script's in-source documentation header.
   absolute on the way.
 * [`build-llvm-wasi.sh`](scripts/build-llvm-wasi.sh): builds the WebAssembly package.
 
-The scripts are tested by [`tests/test-scripts.sh`](tests/test-scripts.sh), which runs on pull requests.
+The scripts are tested by [`tests/test-scripts.sh`](tests/test-scripts.sh), which runs on pull requests
+and before the builds of a release run.
 
 ## Using an existing LLVM build with Swift
 

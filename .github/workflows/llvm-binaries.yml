@@ -19,7 +19,12 @@ env:
   llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
+  # Fail in minutes rather than hours if the scripts are broken.
+  checks:
+    uses: ./.github/workflows/checks.yml
+
   distribution:
+    needs: [checks]
     strategy:
       fail-fast: false
 
@@ -323,6 +328,7 @@ jobs:
   # LLVM that runs in WebAssembly, for the Hylo playground. It's built against the Swift wasm SDK
   # and only works with that Swift version.
   wasi:
+    needs: [checks]
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
