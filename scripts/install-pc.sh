@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Transforms the given .pc file into a non-relocatable version by replacing ${pcfiledir} with an
 # absolute path, and outputs the resulting file to the given folder (by default, /usr/local/lib/pkgconfig/).
@@ -11,6 +11,8 @@
 # Usage Examples:
 #   ./install-pc.sh path/to/file.pc
 #   ./install-pc.sh path/to/file.pc /custom/pkgconfig/dir/
+
+set -euo pipefail
 
 # Default destination directory
 DEFAULT_DEST_DIR="/usr/local/lib/pkgconfig"

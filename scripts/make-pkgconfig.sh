@@ -18,8 +18,7 @@
 #   export PATH="/path/to/llvm/bin:$PATH"
 #   ./make-pkgconfig.sh "$(llvm-config --prefix)/pkgconfig/llvm.pc"
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 if [ $# -ne 1 ]; then
     echo "Error: expected 1 argument, got $#" >&2
@@ -49,8 +48,9 @@ normalize_path_separators() {
 #
 # Occurrences of the package prefix are replaced by "${pcfiledir}/../".
 replace_with_relocatable_paths() {
-    local input=$(normalize_path_separators "$1")
-    local llvm_root=$(normalize_path_separators "$(llvm-config --prefix)")
+    local input llvm_root
+    input=$(normalize_path_separators "$1")
+    llvm_root=$(normalize_path_separators "$(llvm-config --prefix)")
     
     # Ensure llvm_root ends with a separator
     if [[ ! "$llvm_root" =~ /$ ]]; then

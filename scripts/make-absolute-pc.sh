@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Replaces ${pcfiledir} in the given .pc file with an absolute path, outputting the result to stdout.
 # Parameters:
@@ -6,6 +6,8 @@
 #
 # Usage Example:
 #   ./make-absolute-pc.sh path/to/file.pc > path/to/absolute-file.pc
+
+set -euo pipefail
 
 # Check if a file path was provided
 if [ $# -ne 1 ]; then
