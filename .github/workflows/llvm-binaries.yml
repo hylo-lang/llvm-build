@@ -20,7 +20,7 @@ env:
 
 jobs:
   checks:
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/ci.yml
 
   distribution:
     needs: [checks]
