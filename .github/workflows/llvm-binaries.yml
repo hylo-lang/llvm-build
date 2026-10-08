@@ -156,42 +156,19 @@ jobs:
       PACKAGE_NAME: llvm-${{ github.event.inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
 
     steps:
-      # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ./SourceCache/llvm-build
+          show-progress: false
+
       - name: Free up disk space for debug builds
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          echo "Available disk space before cleanup:"
-          df -h
-          
-          # Remove .NET and related tools
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
-          # Remove additional large packages and caches
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /usr/share/swift
-          sudo rm -rf /usr/local/lib/heroku
-          
-          # Remove unnecessary packages
-          sudo apt-get remove -y '^ghc-*' '^dotnet-*' || true
-          sudo apt-get autoremove -y
-          
-          echo "Available disk space after cleanup:"
-          df -h
+        uses: ./SourceCache/llvm-build/.github/actions/free-disk-space
 
       - name: Set up specific Xcode version
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         if: ${{ runner.os == 'macOS' }}
         with:
           xcode-version: '26.0.1'
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          path: ./SourceCache/llvm-build
-          show-progress: false
 
       - name: Set up LLVM build tools and sources
         uses: ./SourceCache/llvm-build/.github/actions/build-tools
@@ -277,30 +254,9 @@ jobs:
           df -h
 
       - name: Additional cleanup before install
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          # Clean up more system directories if space is still tight
-          AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
-          echo "Available space: ${AVAILABLE_SPACE}KB"
-          
-          # If less than 2GB available, do aggressive cleanup
-          if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then
-            echo "Low disk space detected, performing aggressive cleanup..."
-            
-            # Remove more development tools and caches
-            sudo rm -rf /usr/local/share/vcpkg || true
-            sudo rm -rf /usr/local/share/gem || true
-            sudo rm -rf /usr/share/doc || true
-            sudo rm -rf /usr/share/man || true
-            sudo rm -rf /var/cache/apt || true
-            sudo rm -rf /tmp/* || true
-            
-            # Clear journal logs
-            sudo journalctl --vacuum-time=1d || true
-            
-            echo "Disk space after aggressive cleanup:"
-            df -h
-          fi
+        uses: ./SourceCache/llvm-build/.github/actions/free-disk-space
+        with:
+          min-free-gb: 2
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
