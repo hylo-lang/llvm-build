@@ -6,6 +6,8 @@
 // LLVM_ENABLE_THREADS=OFF. So LLVM is compiled with a __config_site that enables threads on top of
 // wasi-libc's pthread stubs, and the parts of libc++ that this needs are built into
 // lib/libc++threads.a. llvm.pc puts the __config_site on the consumer's include path too.
+// The WASI SDK now does this itself (https://github.com/WebAssembly/wasi-libc/issues/501); once the
+// Swift SDK does too, this can go.
 //
 //   node ci/build-llvm-wasi.mjs --sdk swift-6.3.2-RELEASE_wasm --source <patched llvm-project> \
 //     --native-tools <directory with llvm-tblgen and llvm-min-tblgen> --build <dir> --prefix <dir>

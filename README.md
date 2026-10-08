@@ -59,8 +59,9 @@ inside WebAssembly, for the Hylo playground. Compared to the other packages:
   `libcxx-threads/__config_site` (which `llvm.pc` puts on the include path) and
   `lib/libc++threads.a` to turn them back on.
 - There's no `bin/`.
-- LLVM is [patched](patches/llvm-wasi-host.patch) to support WASI as a host. The patch comes from
-  [YoWASP](https://github.com/YoWASP/llvm-project) and has to be ported to each LLVM version.
+- LLVM is [patched](patches/llvm-wasi-host.patch) to support WASI as a host. The patch is based on
+  the unmerged [llvm/llvm-project#92677](https://github.com/llvm/llvm-project/pull/92677), as carried
+  by [YoWASP](https://github.com/YoWASP/llvm-project), and has to be ported to each LLVM version.
 
 It's built by [`ci/build-llvm-wasi.mjs`](ci/build-llvm-wasi.mjs).
 
