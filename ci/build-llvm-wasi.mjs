@@ -128,11 +128,11 @@ function main() {
     '-C', fileURLToPath(new URL('../cmake/caches/LLVM-wasi.cmake', import.meta.url)),
     `-DLLVM_NATIVE_TOOL_DIR=${path.resolve(values['native-tools'])}`,
     `-DCMAKE_INSTALL_PREFIX=${prefix}`], { env })
-  run('ninja', ['-C', llvm, ...targets], { env })
+  run('cmake', ['--build', llvm, '--target', ...targets], { env })
 
   // The package.
   fs.rmSync(prefix, { recursive: true, force: true })
-  run('ninja', ['-C', llvm, 'install-llvm-headers', 'install-lld-headers'], { env })
+  run('cmake', ['--build', llvm, '--target', 'install-llvm-headers', 'install-lld-headers'], { env })
   for (const directory of ['lib', 'libcxx-threads', 'pkgconfig']) {
     fs.mkdirSync(path.join(prefix, directory), { recursive: true })
   }
@@ -148,4 +148,6 @@ function main() {
   console.log(pc)
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+} 
