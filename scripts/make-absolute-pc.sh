@@ -1,31 +1,14 @@
 #!/usr/bin/env bash
 
-# Replaces ${pcfiledir} in the given .pc file with an absolute path, outputting the result to stdout.
-# Parameters:
-#   $1 - The path to the .pc file to process (relative or absolute).
+# Prints the given .pc file with ${pcfiledir} replaced by the file's absolute directory.
 #
-# Usage Example:
-#   ./make-absolute-pc.sh path/to/file.pc > path/to/absolute-file.pc
+# Usage: make-absolute-pc.sh <path-to-pc-file> > absolute.pc
 
 set -euo pipefail
 
-# Check if a file path was provided
-if [ $# -ne 1 ]; then
-    echo "Error: Please provide exactly one argument - the path to the .pc file" >&2
+if [ $# -ne 1 ] || [ ! -f "$1" ]; then
     echo "Usage: $0 <path-to-pc-file>" >&2
     exit 1
 fi
 
-PC_FILE="$1"
-
-# Check if the file exists
-if [ ! -f "$PC_FILE" ]; then
-    echo "Error: File '$PC_FILE' does not exist or is not a regular file" >&2
-    exit 1
-fi
-
-# Get the absolute directory path of the .pc file
-PC_DIR_ABS=$(cd "$(dirname "$PC_FILE")" && pwd)
-
-# Read the file and replace ${pcfiledir} with the absolute directory path
-sed "s|\${pcfiledir}|$PC_DIR_ABS|g" "$PC_FILE"
+sed "s|\${pcfiledir}|$(cd "$(dirname "$1")" && pwd)|g" "$1"
