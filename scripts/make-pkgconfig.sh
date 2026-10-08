@@ -92,9 +92,9 @@ system_libs=$(normalize_spaces "$(llvm-config --system-libs --libs core analysis
 lib_attributes=$(replace_with_relocatable_paths "-L${absolute_libdir} ${system_libs}")
 lib_attributes=$(convert_libs_to_spm_compatible_flags "$lib_attributes")
 
-# Get CXX flags
-cxxflags_output=$(normalize_spaces "$(llvm-config --cxxflags)")
-cflags=$(replace_with_relocatable_paths "$cxxflags_output")
+# SwiftPM only accepts -I flags from pkg-config.
+absolute_includedir=$(normalize_spaces "$(llvm-config --includedir)")
+cflags=$(replace_with_relocatable_paths "-I${absolute_includedir}")
 
 # Generate pkg-config content
 echo Name: LLVM > "$filename"
