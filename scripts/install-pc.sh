@@ -35,7 +35,7 @@ if [ ! -f "$PC_FILE" ]; then
 fi
 
 # Get the script directory to find make-absolute-pc.sh
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MAKE_ABSOLUTE_SCRIPT="$SCRIPT_DIR/make-absolute-pc.sh"
 
 # Check if make-absolute-pc.sh exists

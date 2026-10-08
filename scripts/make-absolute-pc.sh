@@ -25,8 +25,7 @@ if [ ! -f "$PC_FILE" ]; then
 fi
 
 # Get the absolute directory path of the .pc file
-PC_FILE_ABS=$(realpath "$PC_FILE")
-PC_DIR_ABS=$(dirname "$PC_FILE_ABS")
+PC_DIR_ABS=$(cd "$(dirname "$PC_FILE")" && pwd)
 
 # Read the file and replace ${pcfiledir} with the absolute directory path
 sed "s|\${pcfiledir}|$PC_DIR_ABS|g" "$PC_FILE"
