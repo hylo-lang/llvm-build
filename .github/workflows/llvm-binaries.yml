@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [windows-2025, macos-15, ubuntu-24.04]
+        os: [windows-2022, macos-15, ubuntu-24.04]
         arch: [x86_64, arm64]
         configuration: [Debug, MinSizeRel]
 
@@ -51,7 +51,7 @@ jobs:
             compile_cache_max_size: 2G
             install_target: install-distribution
 
-          - os: windows-2025
+          - os: windows-2022
 
             c_compiler: cl
             # Swift's runtime is compiled this way, and can't be
@@ -88,7 +88,7 @@ jobs:
 
           # Extensions
 
-          - os: windows-2025
+          - os: windows-2022
 
             cmake_system_name: Windows
             triple_suffix: unknown-windows-msvc17
@@ -120,11 +120,12 @@ jobs:
             arch: arm64
             runner: macos-15
 
-          - os: windows-2025
+          - os: windows-2022
             arch: x86_64
             runner: windows-2022
 
-          - os: windows-2025
+          # GitHub has no windows-2022 image for arm64.
+          - os: windows-2022
             arch: arm64
             runner: windows-11-arm
 

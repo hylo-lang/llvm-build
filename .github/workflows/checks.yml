@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         # macOS has BSD sed and Bash 3.2; Windows runs the scripts in Git Bash.
-        runner: [ubuntu-24.04, macos-15, windows-2025]
+        runner: [ubuntu-24.04, macos-15, windows-2022]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
