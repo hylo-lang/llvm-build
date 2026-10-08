@@ -64,7 +64,7 @@ replace_with_relocatable_paths() {
 # Outputs $1 with all contiguous white-space subsequences replaced by a single space,
 # trimming at start and end.
 normalize_spaces() {
-    echo "$1" | sed 's/[[:space:]]\+/ /g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+    echo "$1" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//'
 }
 
 # Outputs $1 with any MSVC-style library paths replaced with -l flags if the script is run on Windows.
@@ -99,7 +99,7 @@ cflags=$(replace_with_relocatable_paths "-I${absolute_includedir}")
 # Generate pkg-config content
 echo Name: LLVM > "$filename"
 echo Description: Low-level Virtual Machine compiler framework >> "$filename"
-echo Version: $(echo ${version} | sed 's/\([0-9.]\+\).*/\1/') >> "$filename"
+echo "Version: $(echo "${version}" | sed -E 's/^([0-9.]+).*/\1/')" >> "$filename"
 echo URL: http://www.llvm.org/ >> "$filename"
 echo Libs: ${lib_attributes} >> "$filename"
 echo Cflags: ${cflags} >> "$filename"
