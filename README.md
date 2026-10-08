@@ -26,6 +26,8 @@ action. To install the releases in Docker, see https://github.com/hylo-lang/hylo
 
 ## What's in a release
 
+Releases are tagged `llvm-<version>-<n>`. Older releases were tagged with a timestamp.
+
 Release assets are named `llvm-<version>-<cpu>-<triple>-<configuration>.tar.zst` and are structured
 as follows:
 

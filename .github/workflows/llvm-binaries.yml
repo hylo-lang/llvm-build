@@ -323,9 +323,16 @@ jobs:
           path: packages
           merge-multiple: true
 
+      # llvm-<version>-<n>, counting up from 1 for each LLVM version.
       - name: Choose the tag
         id: tag
-        run: echo "name=$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREFIX: llvm-${{ inputs.llvm_version }}-
+        run: |
+          last=$(gh api --paginate "repos/${{ github.repository }}/git/matching-refs/tags/$PREFIX" --jq '.[].ref' \
+            | sed "s|^refs/tags/$PREFIX||" | grep -E '^[0-9]+$' | sort -n | tail -1 || true)
+          echo "name=$PREFIX$(( ${last:-0} + 1 ))" >> "$GITHUB_OUTPUT"
 
       - name: Create draft release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
