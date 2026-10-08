@@ -62,7 +62,7 @@ inside WebAssembly, for the Hylo playground. Compared to the other packages:
 - LLVM is [patched](patches/llvm-wasi-host.patch) to support WASI as a host. The patch comes from
   [YoWASP](https://github.com/YoWASP/llvm-project) and has to be ported to each LLVM version.
 
-It's built by [`scripts/build-llvm-wasi.sh`](scripts/build-llvm-wasi.sh).
+It's built by [`ci/build-llvm-wasi.mjs`](ci/build-llvm-wasi.mjs).
 
 ## Using a prebuilt release
 
@@ -111,10 +111,10 @@ or upon installation. See each script's in-source documentation header.
 * [`install-pc.sh <path-to-pc-file> [destination-directory]`](scripts/install-pc.sh):
   installs a `.pc` file into a `pkg-config` search directory, making its paths
   absolute on the way.
-* [`build-llvm-wasi.sh`](scripts/build-llvm-wasi.sh): builds the WebAssembly package.
 
-The scripts are tested by [`tests/test-scripts.sh`](tests/test-scripts.sh), which runs on pull requests
-and before the builds of a release run.
+The scripts in [`scripts/`](scripts) are shipped with the packages, so they stay in Bash. Code that
+only runs in CI is in [`ci/`](ci), in JavaScript, with tests that run with `node --test ci/*.test.mjs`
+on pull requests and before the release builds.
 
 ## Using an existing LLVM build with Swift
 

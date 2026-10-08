@@ -367,9 +367,7 @@ jobs:
           swift-version: ${{ env.SWIFT_VERSION }}
 
       - name: Install the Swift SDK for WebAssembly
-        run: |
-          swift sdk install "$SWIFT_SDK_URL" --checksum "$SWIFT_SDK_CHECKSUM"
-          SourceCache/llvm-build/scripts/swift-wasm-sdk-env.sh "$SWIFT_SDK" | tee -a "$GITHUB_ENV"
+        run: swift sdk install "$SWIFT_SDK_URL" --checksum "$SWIFT_SDK_CHECKSUM"
 
       # Not in SourceCache/llvm-project, which is cached and shared with the native builds.
       - name: Fetch and patch the LLVM sources
@@ -382,11 +380,12 @@ jobs:
 
       - name: Build LLVM
         run: >-
-          SourceCache/llvm-build/scripts/build-llvm-wasi.sh
-          SourceCache/llvm-project-wasi
-          "$GITHUB_WORKSPACE/BinaryCache/0/bin"
-          "$GITHUB_WORKSPACE/BinaryCache/wasi"
-          "$GITHUB_WORKSPACE/BuildRoot/$PACKAGE_NAME"
+          node SourceCache/llvm-build/ci/build-llvm-wasi.mjs
+          --sdk "$SWIFT_SDK"
+          --source SourceCache/llvm-project-wasi
+          --native-tools BinaryCache/0/bin
+          --build BinaryCache/wasi
+          --prefix "BuildRoot/$PACKAGE_NAME"
 
       - name: Copy pkg-config Installation Scripts
         run: |
@@ -430,7 +429,7 @@ jobs:
       - name: Choose the tag
         id: tag
         run: |
-          tag=$(git ls-remote --tags --refs origin | cut -f2 | scripts/next-release-tag.sh "$llvm_version")
+          tag=$(git ls-remote --tags --refs origin | cut -f2 | node ci/next-release-tag.mjs "$llvm_version")
           echo "name=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Create draft release

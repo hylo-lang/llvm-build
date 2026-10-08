@@ -1,6 +1,6 @@
 # Cross-compiles to wasm32-wasip1 with the Swift toolchain's clang and the Swift wasm SDK. Expects
 # SWIFT_BIN, WASI_SYSROOT, WASI_RESOURCE_DIR and LIBCXX_THREADS_INCLUDE in the environment; see
-# scripts/build-llvm-wasi.sh.
+# ci/build-llvm-wasi.mjs.
 
 # Platform/WASI is new in 3.31, and LLVM needs the WASI variable it sets.
 if(CMAKE_VERSION VERSION_LESS 3.31)
@@ -29,6 +29,6 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 # mmap, which wasi-libc only has in emulated form.
 set(flags "-resource-dir=$ENV{WASI_RESOURCE_DIR} -D_WASI_EMULATED_MMAN -fno-exceptions")
 set(CMAKE_C_FLAGS_INIT "${flags}")
-# See scripts/build-libcxx-threads.sh.
+# See ci/build-llvm-wasi.mjs.
 set(CMAKE_CXX_FLAGS_INIT "${flags} -isystem $ENV{LIBCXX_THREADS_INCLUDE}")
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-resource-dir=$ENV{WASI_RESOURCE_DIR} -lwasi-emulated-mman")
