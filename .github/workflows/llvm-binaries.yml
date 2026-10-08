@@ -144,7 +144,7 @@ jobs:
           path: ./SourceCache/llvm-build
           show-progress: false
 
-      - name: Free up disk space for debug builds
+      - name: Free up disk space
         uses: ./SourceCache/llvm-build/.github/actions/free-disk-space
 
       - name: Set up specific Xcode version
@@ -251,11 +251,6 @@ jobs:
  
           echo "Disk space after build cleanup:"
           df -h
-
-      - name: Additional cleanup before install
-        uses: ./SourceCache/llvm-build/.github/actions/free-disk-space
-        with:
-          min-free-gb: 2
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
