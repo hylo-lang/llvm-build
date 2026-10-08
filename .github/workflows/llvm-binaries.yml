@@ -291,9 +291,82 @@ jobs:
           gh actions-cache delete sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package- --confirm -R ${{ github.repository }}
         continue-on-error: true
 
+  # LLVM that runs in WebAssembly, for the Hylo playground. It's built against the Swift wasm SDK
+  # and only works with that Swift version.
+  wasi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    env:
+      SWIFT_VERSION: '6.3.2'
+      SWIFT_SDK: swift-6.3.2-RELEASE_wasm
+      # Published at https://www.swift.org/install/linux/.
+      SWIFT_SDK_URL: https://download.swift.org/swift-6.3.2-release/wasm-sdk/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE_wasm.artifactbundle.tar.gz
+      SWIFT_SDK_CHECKSUM: a61f0584c93283589f8b2f42db05c1f9a182b506c2957271402992655591dd7c
+      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-wasm32-unknown-wasip1-swift6.3.2-MinSizeRel
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ./SourceCache/llvm-build
+          show-progress: false
+
+      # Native tablegen for the cross build.
+      - name: Set up LLVM build tools and sources
+        uses: ./SourceCache/llvm-build/.github/actions/build-tools
+        with:
+          llvm_version: ${{ env.llvm_version }}
+
+      - name: Set up Swift ${{ env.SWIFT_VERSION }}
+        uses: SwiftyLab/setup-swift@38f54a76b70d989321de9dc7c840618c08cf56e9 # v1.14.0
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+
+      - name: Install the Swift SDK for WebAssembly
+        run: |
+          swift sdk install "$SWIFT_SDK_URL" --checksum "$SWIFT_SDK_CHECKSUM"
+          SourceCache/llvm-build/scripts/swift-wasm-sdk-env.sh "$SWIFT_SDK" | tee -a "$GITHUB_ENV"
+
+      # Not in SourceCache/llvm-project, which is cached and shared with the native builds.
+      - name: Fetch and patch the LLVM sources
+        run: |
+          git -c advice.detachedHead=false clone --quiet --depth 1 --branch "llvmorg-$llvm_version" --filter=blob:none --sparse \
+            https://github.com/llvm/llvm-project.git SourceCache/llvm-project-wasi
+          # libc for its headers.
+          git -C SourceCache/llvm-project-wasi sparse-checkout set llvm lld cmake third-party libunwind libc
+          git -C SourceCache/llvm-project-wasi apply "$GITHUB_WORKSPACE/SourceCache/llvm-build/patches/llvm-wasi-host.patch"
+
+      - name: Build LLVM
+        run: >-
+          SourceCache/llvm-build/scripts/build-llvm-wasi.sh
+          SourceCache/llvm-project-wasi
+          "$GITHUB_WORKSPACE/BinaryCache/0/bin"
+          "$GITHUB_WORKSPACE/BinaryCache/wasi"
+          "$GITHUB_WORKSPACE/BuildRoot/$PACKAGE_NAME"
+
+      - name: Copy pkg-config Installation Scripts
+        run: |
+          cp SourceCache/llvm-build/scripts/install-pc.sh SourceCache/llvm-build/scripts/make-absolute-pc.sh \
+            "BuildRoot/$PACKAGE_NAME/pkgconfig/"
+
+      - name: Package LLVM
+        working-directory: ${{ github.workspace }}/BuildRoot/
+        timeout-minutes: 30
+        run: tar -cf - "$PACKAGE_NAME" | zstd -T0 -3 -o "$GITHUB_WORKSPACE/$PACKAGE_NAME.tar.zst"
+
+      - name: Upload package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.zst
+          if-no-files-found: error
+          # Already compressed.
+          compression-level: 0
+          retention-days: 3
+
   # Release everything at once, so that a failed run doesn't leave a partial release behind.
   release:
-    needs: [distribution]
+    needs: [distribution, wasi]
     if: inputs.release
     runs-on: ubuntu-24.04
     permissions:

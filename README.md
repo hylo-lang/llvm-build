@@ -48,6 +48,22 @@ rest of LLVM's compile flags, get them from `llvm-config --cxxflags`.
 The packages are meant for [Swifty-LLVM](https://github.com/hylo-lang/Swifty-LLVM), so they only
 contain the libraries `llvm.pc` links, plus `llvm-config` and `lld`.
 
+### WebAssembly
+
+`llvm-<version>-wasm32-unknown-wasip1-swift<swift-version>-MinSizeRel.tar.zst` is LLVM built to run
+inside WebAssembly, for the Hylo playground. Compared to the other packages:
+
+- It only has the WebAssembly target, plus lld's wasm port (`lldWasm`, `lldCommon` and headers).
+- It's built against the Swift wasm SDK, so it only works with that Swift version.
+- The SDK's libc++ has threads disabled, which LLVM doesn't compile without. The package adds
+  `libcxx-threads/__config_site` (which `llvm.pc` puts on the include path) and
+  `lib/libc++threads.a` to turn them back on.
+- There's no `bin/`.
+- LLVM is [patched](patches/llvm-wasi-host.patch) to support WASI as a host. The patch comes from
+  [YoWASP](https://github.com/YoWASP/llvm-project) and has to be ported to each LLVM version.
+
+It's built by [`scripts/build-llvm-wasi.sh`](scripts/build-llvm-wasi.sh).
+
 ## Using a prebuilt release
 
 Unpack the asset wherever you like. `pkgconfig/llvm.pc` is **relocatable**: all
@@ -95,6 +111,7 @@ or upon installation. See each script's in-source documentation header.
 * [`install-pc.sh <path-to-pc-file> [destination-directory]`](scripts/install-pc.sh):
   installs a `.pc` file into a `pkg-config` search directory, making its paths
   absolute on the way.
+* [`build-llvm-wasi.sh`](scripts/build-llvm-wasi.sh): builds the WebAssembly package.
 
 The scripts are tested by [`tests/test-scripts.sh`](tests/test-scripts.sh), which runs on pull requests.
 
