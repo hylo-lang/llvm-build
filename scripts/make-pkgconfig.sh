@@ -105,11 +105,14 @@ convert_libs_to_spm_compatible_flags() {
 if [ "$from_installed_libraries" = true ]; then
     libdir="$(dirname "$filename")/../lib"
     lib_attributes="-L\${pcfiledir}/../lib"
-    LC_COLLATE=C # same order in every locale
-    for library in "$libdir"/lib*.a; do
-        [ -e "$library" ] || { echo "Error: no static libraries in $libdir" >&2; exit 1; }
-        name=$(basename "$library" .a)
-        lib_attributes="$lib_attributes -l${name#lib}"
+    libraries=$(cd "$libdir" && shopt -s nullglob && printf '%s\n' lib*.a | LC_ALL=C sort || true)
+    if [ -z "$libraries" ]; then
+        echo "Error: no static libraries in $libdir" >&2
+        exit 1
+    fi
+    for library in $libraries; do
+        library=${library%.a}
+        lib_attributes="$lib_attributes -l${library#lib}"
     done
 
     cflags="-I\${pcfiledir}/../include"
