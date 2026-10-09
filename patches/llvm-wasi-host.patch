@@ -2,7 +2,7 @@ Lets LLVM and lld build for, and run on, a WASI host. Apply to llvmorg-23.1.0.
 
 Based on https://github.com/llvm/llvm-project/pull/92677 (RFC:
 https://discourse.llvm.org/t/rfc-building-llvm-for-webassembly/79073), as carried by YoWASP
-(https://github.com/YoWASP/llvm-project), ported to LLVM 23.1.0. Compared to the PR, it also
+(https://codeberg.org/YoWASP/llvm-project), ported to LLVM 23.1.0. Compared to the PR, it also
 patches Jobserver.cpp and ProgramStack.cpp, which are newer than the PR, as well as Compiler.h
 and lld's Filesystem.cpp, and leaves out the clang driver changes.
 

@@ -1,0 +1,15 @@
+// Type-checks the CI scripts, which Node 24 runs directly by stripping the types.
+{
+  "include": ["ci"],
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2024",
+    "module": "nodenext",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true
+  }
+}

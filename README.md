@@ -51,19 +51,10 @@ contain the libraries `llvm.pc` links, plus `llvm-config` and `lld`.
 ### WebAssembly
 
 `llvm-<version>-wasm32-unknown-wasip1-swift<swift-version>-MinSizeRel.tar.zst` is LLVM built to run
-inside WebAssembly, for the Hylo playground. Compared to the other packages:
-
-- It only has the WebAssembly target, plus lld's wasm port (`lldWasm`, `lldCommon` and headers).
-- It's built against the Swift wasm SDK, so it only works with that Swift version.
-- The SDK's libc++ has threads disabled, which LLVM doesn't compile without. The package adds
-  `libcxx-threads/__config_site` (which `llvm.pc` puts on the include path) and
-  `lib/libc++threads.a` to turn them back on.
-- There's no `bin/`.
-- LLVM is [patched](patches/llvm-wasi-host.patch) to support WASI as a host. The patch is based on
-  the unmerged [llvm/llvm-project#92677](https://github.com/llvm/llvm-project/pull/92677), as carried
-  by [YoWASP](https://github.com/YoWASP/llvm-project), and has to be ported to each LLVM version.
-
-It's built by [`ci/build-llvm-wasi.mjs`](ci/build-llvm-wasi.mjs).
+inside WebAssembly, for the Hylo playground. It only has the WebAssembly target and lld's wasm port,
+and only works with the Swift version in its name. See [docs/wasm.md](docs/wasm.md) for details.
+Thanks to the [YoWASP](https://codeberg.org/YoWASP/llvm-project) for the LLVM patches needed to
+support this use case!
 
 ## Using a prebuilt release
 
@@ -114,8 +105,9 @@ or upon installation. See each script's in-source documentation header.
   absolute on the way.
 
 The scripts in [`scripts/`](scripts) are shipped with the packages, so they stay in Bash. Code that
-only runs in CI is in [`ci/`](ci), in JavaScript, with tests that run with `node --test ci/*.test.mjs`
-on pull requests and before the release builds.
+only runs in CI is in [`ci/`](ci), in TypeScript, which Node 24 runs directly. Its tests and type
+check run on pull requests and before the release builds; locally, run `npm ci`, then `npm test` and
+`npm run check`.
 
 ## Using an existing LLVM build with Swift
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { libcxxTag, pkgConfig, sdkPaths, withThreads } from './wasi.mjs'
+import { libcxxTag, pkgConfig, sdkPaths, withThreads } from './wasi.ts'
 
 test('sdkPaths reads swift sdk configure output', () => {
   const output = 'sdkRootPath: /sdk/WASI.sdk\nswiftStaticResourcesPath: /sdk/lib/swift_static\n'

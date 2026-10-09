@@ -1,4 +1,4 @@
-# LLVM and lld for running in a WebAssembly host. Used by ci/build-llvm-wasi.mjs.
+# LLVM and lld for running in a WebAssembly host. Used by ci/build-llvm-wasi.ts.
 #
 # This doesn't include LLVM.cmake, because its cache entries (such as LLVM_TARGETS_TO_BUILD)
 # couldn't be overridden here.

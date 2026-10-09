@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { nextReleaseTag } from './release-tag.mjs'
+import { nextReleaseTag } from './next-release-tag.lib.ts'
 
 test('nextReleaseTag counts up per LLVM version', () => {
   assert.equal(nextReleaseTag('23.1.0', []), 'llvm-23.1.0-1')

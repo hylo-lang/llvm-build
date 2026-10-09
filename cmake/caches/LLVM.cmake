@@ -21,7 +21,8 @@ set(LLVM_ENABLE_OCAMLDOC NO CACHE BOOL "")
 set(LLVM_ENABLE_TERMINFO NO CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER NO CACHE BOOL "")
 set(LLVM_ENABLE_ZLIB NO CACHE BOOL "")
-# The DIA SDK needs ATL, which the 14.44 toolset lacks on windows-11-arm. LLVM reads PDBs natively.
+# The DIA SDK needs ATL, which the 14.44 toolset lacks on windows-11-arm.
+# LLVM reads PDBs natively, so we don't need to depend on this.
 set(LLVM_ENABLE_DIA_SDK NO CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS NO CACHE BOOL "")
 set(LLVM_INCLUDE_DOCS NO CACHE BOOL "")
@@ -37,9 +38,12 @@ set(LLVM_PARALLEL_LINK_JOBS 2 CACHE STRING "")
 set(LLVM_VERSION_SUFFIX "" CACHE STRING "")
 set(PACKAGE_VENDOR hylo-lang.org CACHE STRING "")
 
-# The libraries llvm.pc links (see scripts/make-pkgconfig.sh). After an LLVM upgrade, regenerate
-# the list with
-#   llvm-config --libnames core analysis bitwriter passes target all-targets
+# The libraries llvm.pc links (see scripts/make-pkgconfig.sh):
+# The configuration can't compute this list itself, because LLVM only resolves its
+# component dependencies after it's decided which libraries the distribution exports.
+#
+# After a major LLVM upgrade, regenerate the list with
+#  llvm-config --link-static --libnames core analysis bitwriter passes target all-targets | tr ' ' '\n' | sed -E 's/^(lib)?(LLVM[^.]+)\..*$/  \2/' | LC_ALL=C sort
 set(HYLO_LLVM_DISTRIBUTION_LIBRARIES
   LLVMAArch64AsmParser
   LLVMAArch64CodeGen
