@@ -154,8 +154,8 @@ jobs:
           xcode-version: '26.0.1'
 
       # Swift on Windows uses MSVC 14.44 and Windows SDK 10.0.22621.0. Visual Studio 2026 on the images
-      # defaults to newer ones (MSVC 14.51, SDK 10.0.26100.0), and libraries built with those would
-      # need them in every consumer too. 22621 is installed if the runner image doesn't have it.
+      # defaults to newer ones, and libraries built with those would need them in every consumer too.
+      # We install 22621 if the runner image doesn't have it already.
       - name: Install Windows SDK 10.0.22621.0
         if: runner.os == 'Windows'
         shell: pwsh
@@ -183,10 +183,6 @@ jobs:
           $msvc = Split-Path -Leaf $env:VCToolsInstallDir.TrimEnd('\')
           Write-Host "MSVC $msvc, Windows SDK $sdk, UCRT $ucrt"
 
-          # The packages are published as *-unknown-windows-msvc17 and are meant to
-          # link against a stock Swift install, which swift.org provisions as VS 2022
-          # (MSVC 14.4x) with Windows SDK 10.0.22621. Fail before the hour-long build
-          # rather than ship libraries built against a newer toolchain.
           $problems = @()
           if ($sdk -ne '10.0.22621.0')  { $problems += "WindowsSDKVersion is $sdk, expected 10.0.22621.0" }
           if ($ucrt -ne '10.0.22621.0') { $problems += "UCRTVersion is $ucrt, expected 10.0.22621.0" }

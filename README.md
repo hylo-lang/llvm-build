@@ -104,10 +104,8 @@ or upon installation. See each script's in-source documentation header.
   installs a `.pc` file into a `pkg-config` search directory, making its paths
   absolute on the way.
 
-The scripts in [`scripts/`](scripts) are shipped with the packages, so they stay in Bash. Code that
-only runs in CI is in [`ci/`](ci), in TypeScript, which Node 24 runs directly. Its tests and type
-check run on pull requests and before the release builds; locally, run `npm ci`, then `npm test` and
-`npm run check`.
+The scripts in [`scripts/`](scripts) are shipped with the packages, so they are written in Bash. 
+Code that only runs in CI is in [`ci/`](ci), written in TypeScript, which Node 24 runs directly.
 
 ## Using an existing LLVM build with Swift
 
