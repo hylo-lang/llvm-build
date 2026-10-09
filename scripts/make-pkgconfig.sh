@@ -17,9 +17,11 @@ command -v llvm-config > /dev/null || { echo "Error: llvm-config is not on PATH"
 # replaced by ${pcfiledir}/..
 relocatable() {
     local prefix
-    prefix=$(llvm-config --prefix | sed 's|\\|/|g')
-    echo "$*" | sed 's|\\|/|g' | tr -s '[:space:]' ' ' |
-        sed -e "s|${prefix%/}/|\${pcfiledir}/../|g" -e 's/^ //' -e 's/ $//'
+    # Escape the characters that are special in the pattern: . * ^ $ [ and the | delimiter.
+    prefix=$(llvm-config --prefix | sed -e 's|\\|/|g' -e 's/[.*^$|[]/\\&/g')
+    # Replace the prefix before collapsing whitespace, which would change any in the prefix.
+    printf '%s\n' "$*" | sed -e 's|\\|/|g' -e "s|${prefix%/}/|\${pcfiledir}/../|g" |
+        tr -s '[:space:]' ' ' | sed -e 's/^ //' -e 's/ $//'
 }
 
 libs=$(relocatable "-L$(llvm-config --libdir)" \
@@ -32,7 +34,7 @@ case "$(uname -s)" in
 esac
 
 # SwiftPM only accepts -I flags from pkg-config, so --cxxflags isn't used.
-mkdir -p "$(dirname "$1")"
+mkdir -p -- "$(dirname -- "$1")"
 cat > "$1" <<END
 Name: LLVM
 Description: Low-level Virtual Machine compiler framework

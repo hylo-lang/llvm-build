@@ -22,8 +22,18 @@ jobs:
   checks:
     uses: ./.github/workflows/ci.yml
 
+  version:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check the LLVM version
+        run: |
+          if ! [[ $llvm_version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::The LLVM version must look like 23.1.0 or 23.1.0-rc1"
+            exit 1
+          fi
+
   distribution:
-    needs: [checks]
+    needs: [checks, version]
     strategy:
       fail-fast: false
 
@@ -333,7 +343,7 @@ jobs:
   # LLVM that runs in WebAssembly, for the Hylo playground. It's built against the Swift wasm SDK
   # and only works with that Swift version.
   wasi:
-    needs: [checks]
+    needs: [checks, version]
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 

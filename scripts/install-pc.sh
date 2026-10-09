@@ -15,5 +15,11 @@ fi
 
 destination=${2:-/usr/local/lib/pkgconfig}
 mkdir -p "$destination"
-"$(dirname "$0")/make-absolute-pc.sh" "$1" > "$destination/$(basename "$1")"
-echo "Installed $destination/$(basename "$1")"
+installed="$destination/$(basename -- "$1")"
+# Redirecting to $1 itself would empty it before make-absolute-pc.sh reads it.
+if [ "$1" -ef "$installed" ]; then
+    echo "$1 is already in $destination" >&2
+    exit 1
+fi
+"$(dirname -- "$0")/make-absolute-pc.sh" "$1" > "$installed"
+echo "Installed $installed"

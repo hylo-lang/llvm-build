@@ -11,4 +11,10 @@ if [ $# -ne 1 ] || [ ! -f "$1" ]; then
     exit 1
 fi
 
-sed "s|\${pcfiledir}|$(cd "$(dirname "$1")" && pwd)|g" "$1"
+# The file's directory, as given, e.g. pkgconfig.
+pcfiledir=$(dirname -- "$1")
+# Made absolute without resolving symlinks.
+pcfiledir=$(CDPATH='' cd -- "$pcfiledir" && pwd)
+# Escaped for the sed replacement, where \, & and the | delimiter are special.
+pcfiledir=$(printf '%s\n' "$pcfiledir" | sed 's/[\\&|]/\\&/g')
+sed "s|\${pcfiledir}|$pcfiledir|g" "$1"

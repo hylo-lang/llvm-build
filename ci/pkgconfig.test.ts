@@ -37,6 +37,11 @@ function fakeUname(bin: string, system: string) {
   writeScript(bin, 'uname', `echo ${system}\n`)
 }
 
+/**
+ * The path component of the LLVM prefix in the tests, with whitespace and every character that is special to sed.
+ */
+const prefixName = process.platform === 'win32' ? 'llvm  a&b.^$[c' : 'llvm  a&b.^$[c|d*e\\f'
+
 /** The fake LLVM installation that makePkgconfig runs make-pkgconfig.sh for. */
 interface Fake {
   /** What llvm-config prints for the libraries of the LLVM installed at `prefix`. */
@@ -46,11 +51,11 @@ interface Fake {
 }
 
 /**
- * Runs make-pkgconfig.sh for `fake` in a new directory, whose path has a space in it, and returns
- * the path of the llvm.pc it writes. Throws if make-pkgconfig.sh fails.
+ * Runs make-pkgconfig.sh for `fake` installed in a new directory named prefixName, and returns the
+ * path of the llvm.pc it writes. Throws if make-pkgconfig.sh fails.
  */
 function makePkgconfig({ libs, system = 'Linux' }: Fake): string {
-  const prefix = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'llvm-')), 'llvm install')
+  const prefix = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'llvm-')), prefixName)
   const bin = path.join(prefix, 'bin')
   fs.mkdirSync(bin, { recursive: true })
   fakeLlvmConfig(bin, prefix, libs(prefix))
@@ -85,11 +90,24 @@ test('on Windows, .lib paths and names become -l flags', () => {
   assert.equal(field(pc, 'Libs'), '-L${pcfiledir}/../lib -lLLVMCore -lLLVMSupport -lpsapi')
 })
 
+/** Runs install-pc.sh for the .pc file at `pc` and `destination`. Throws if it fails. */
+function installPc(pc: string, destination: string) {
+  execFileSync('bash', [path.join(scripts, 'install-pc.sh'), pc, destination], { stdio: 'pipe' })
+}
+
 test('install-pc.sh installs a copy with absolute paths', () => {
   const pc = makePkgconfig({ libs: () => '-lLLVMCore' })
   const destination = fs.mkdtempSync(path.join(os.tmpdir(), 'pkgconfig-'))
-  execFileSync('bash', [path.join(scripts, 'install-pc.sh'), pc, destination])
+  installPc(pc, destination)
   const installed = path.join(destination, 'llvm.pc')
-  assert.match(field(installed, 'Cflags'), /^-I\S.*\/llvm install\/pkgconfig\/\.\.\/include$/)
+  const cflags = field(installed, 'Cflags')
+  assert.ok(cflags.startsWith('-I/') && cflags.endsWith(`/${prefixName}/pkgconfig/../include`), cflags)
   assert.doesNotMatch(fs.readFileSync(installed, 'utf8'), /pcfiledir/)
+})
+
+test('install-pc.sh refuses to install over the .pc file it reads', () => {
+  const pc = makePkgconfig({ libs: () => '-lLLVMCore' })
+  const before = fs.readFileSync(pc, 'utf8')
+  assert.throws(() => installPc(pc, path.dirname(pc)))
+  assert.equal(fs.readFileSync(pc, 'utf8'), before)
 })
