@@ -1,0 +1,45 @@
+# LLVM and lld for running in a WebAssembly host. Used by ci/build-llvm-wasi.ts.
+#
+# This doesn't include LLVM.cmake, because its cache entries (such as LLVM_TARGETS_TO_BUILD)
+# couldn't be overridden here.
+
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/../wasi-toolchain.cmake CACHE FILEPATH "")
+set(CMAKE_BUILD_TYPE MinSizeRel CACHE STRING "")
+
+set(LLVM_HOST_TRIPLE wasm32-unknown-wasip1 CACHE STRING "")
+set(LLVM_DEFAULT_TARGET_TRIPLE wasm32-unknown-wasip1 CACHE STRING "")
+set(LLVM_TARGETS_TO_BUILD WebAssembly CACHE STRING "")
+set(LLVM_ENABLE_PROJECTS lld CACHE STRING "")
+
+# NOTE(compnerd) always enable assertions, the toolchain will not provide enough
+# context to resolve issues otherwise and may silently generate invalid output.
+set(LLVM_ENABLE_ASSERTIONS YES CACHE BOOL "")
+
+# wasi-libc and the SDK's libc++ are single-threaded.
+set(LLVM_ENABLE_THREADS NO CACHE BOOL "")
+set(LLVM_ENABLE_PIC NO CACHE BOOL "")
+set(LLVM_BUILD_STATIC YES CACHE BOOL "")
+set(LLVM_ENABLE_UNWIND_TABLES NO CACHE BOOL "")
+
+set(LLVM_ENABLE_ZLIB NO CACHE BOOL "")
+set(LLVM_ENABLE_ZSTD NO CACHE BOOL "")
+set(LLVM_ENABLE_LIBXML2 NO CACHE BOOL "")
+set(LLVM_ENABLE_LIBEDIT NO CACHE BOOL "")
+set(LLVM_ENABLE_LIBPFM NO CACHE BOOL "")
+set(LLVM_ENABLE_TERMINFO NO CACHE BOOL "")
+set(LLVM_ENABLE_PLUGINS NO CACHE BOOL "")
+set(LLVM_ENABLE_BINDINGS NO CACHE BOOL "")
+set(LLVM_ENABLE_CRASH_OVERRIDES NO CACHE BOOL "")
+
+set(LLVM_INCLUDE_TESTS NO CACHE BOOL "")
+set(LLVM_INCLUDE_EXAMPLES NO CACHE BOOL "")
+set(LLVM_INCLUDE_BENCHMARKS NO CACHE BOOL "")
+set(LLVM_INCLUDE_UTILS NO CACHE BOOL "")
+set(LLVM_INCLUDE_DOCS NO CACHE BOOL "")
+set(LLVM_BUILD_TOOLS NO CACHE BOOL "")
+set(LLVM_BUILD_UTILS NO CACHE BOOL "")
+set(LLD_BUILD_TOOLS NO CACHE BOOL "")
+
+set(LLVM_APPEND_VC_REV NO CACHE BOOL "")
+set(LLVM_VERSION_SUFFIX "" CACHE STRING "")
+set(PACKAGE_VENDOR hylo-lang.org CACHE STRING "")

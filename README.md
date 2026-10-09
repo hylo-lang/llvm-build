@@ -26,6 +26,8 @@ action. To install the releases in Docker, see https://github.com/hylo-lang/hylo
 
 ## What's in a release
 
+Releases are tagged `llvm-<version>-<n>`. Older releases were tagged with a timestamp.
+
 Release assets are named `llvm-<version>-<cpu>-<triple>-<configuration>.tar.zst` and are structured
 as follows:
 
@@ -40,7 +42,19 @@ llvm-23.1.0-x86_64-unknown-linux-gnu-MinSizeRel/
    - make-absolute-pc.sh
 ```
 
-`MinSizeRel` builds ship the binutils-style tools (`llvm-ar`, `llvm-nm`, `llvm-objcopy`, `llvm-strip`, ...). To save space, the `Debug` configuration ships only `lld` and `llvm-config`.
+`Cflags` in `llvm.pc` only has the `-I` flag, since SwiftPM rejects anything else. If you need the
+rest of LLVM's compile flags, get them from `llvm-config --cxxflags`.
+
+The packages are meant for [Swifty-LLVM](https://github.com/hylo-lang/Swifty-LLVM), so they only
+contain the libraries `llvm.pc` links, plus `llvm-config` and `lld`.
+
+### WebAssembly
+
+`llvm-<version>-wasm32-unknown-wasip1-swift<swift-version>-MinSizeRel.tar.zst` is LLVM built to run
+inside WebAssembly, for the Hylo playground. It only has the WebAssembly target and lld's wasm port,
+and only works with the Swift version in its name. See [docs/wasm.md](docs/wasm.md) for details.
+Thanks to the [YoWASP](https://codeberg.org/YoWASP/llvm-project) for the LLVM patches needed to
+support this use case!
 
 ## Using a prebuilt release
 
@@ -65,6 +79,16 @@ Installing rewrites `${pcfiledir}` to an absolute path, because the installed co
 next to the LLVM build. That means the installed `llvm.pc` is not relocatable: if you move or delete 
 the unpacked build, re-run `install-pc.sh`.
 
+## Build configuration
+
+The CMake configuration is in [`cmake/caches/`](cmake/caches); the workflow only adds
+platform-specific options. To build roughly what CI builds:
+
+```sh
+cmake -G Ninja -S llvm-project/llvm -B build -C cmake/caches/LLVM-MinSizeRel.cmake
+cmake --build build --target install-distribution-stripped
+```
+
 ## Scripts
 
 The [`scripts/`](scripts) folder contains scripts that are useful either during the release workflow
@@ -79,6 +103,9 @@ or upon installation. See each script's in-source documentation header.
 * [`install-pc.sh <path-to-pc-file> [destination-directory]`](scripts/install-pc.sh):
   installs a `.pc` file into a `pkg-config` search directory, making its paths
   absolute on the way.
+
+The scripts in [`scripts/`](scripts) are shipped with the packages, so they are written in Bash. 
+Code that only runs in CI is in [`ci/`](ci), written in TypeScript, which Node 24 runs directly.
 
 ## Using an existing LLVM build with Swift
 

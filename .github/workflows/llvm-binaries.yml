@@ -8,36 +8,32 @@ on:
         required: true
         default: '23.1.0'
         type: string
+      release:
+        description: 'Publish a release when every build succeeds'
+        required: false
+        default: true
+        type: boolean
 
 env:
   SCCACHE_DIRECT: true
   llvm_version: ${{ github.event.inputs.llvm_version }}
 
 jobs:
-  create_tag:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  version:
     runs-on: ubuntu-24.04
-    outputs:
-      tag_name: ${{ steps.timestamp.outputs.time }}
-
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        show-progress: false
-
-    - name: Capture time
-      uses: Kaven-Universe/github-action-current-date-time@7c1d8465d1bfd7d35466d2ee82a8e460780561ae # v1.5.0
-      id: timestamp
-      with:
-        format: "YYYYMMDD-HHmmss"
-
-    - name: Create the tag.
-      uses: EndBug/latest-tag@8fcae8848c1e23fd8212258f69a9619bc62cad67 # v1.6.3
-      with:
-        ref: ${{ steps.timestamp.outputs.time }}
+      - name: Check the LLVM version
+        run: |
+          if ! [[ $llvm_version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::The LLVM version must look like 23.1.0 or 23.1.0-rc1"
+            exit 1
+          fi
 
   distribution:
-    needs: [create_tag]
-
+    needs: [checks, version]
     strategy:
       fail-fast: false
 
@@ -51,27 +47,23 @@ jobs:
           - c_compiler: clang
           - cmake_msvc_options:
           - cmake_find_root_path_option:
-          - cmake_msvc_debug_info_format_option:
           - cmake_system_processor_option:
           - compile_cache_max_size: 1G
           - cxx_compiler: clang++
           - executable_suffix:
           - llvm_target_arch_option:
-          - package_command: tar --zstd -cf
+          - zstd_level: 3
           - package_suffix: .tar.zst
           - static_lib_suffix: .a
           - toolset_suffix:
           - triple_cpu:
           - install_target: install-distribution-stripped
-          - llvm_distribution_tools: lld;llvm-config;addr2line;ar;c++filt;dsymutil;dwp;llvm-ar;llvm-cov;llvm-cvtres;llvm-cxxfilt;llvm-dlltool;llvm-dwarfdump;llvm-dwp;llvm-lib;llvm-lipo;llvm-nm;llvm-objcopy;llvm-objdump;llvm-pdbutil;llvm-profdata;llvm-ranlib;llvm-rc;llvm-readelf;llvm-readobj;llvm-size;llvm-strings;llvm-strip;llvm-symbolizer;llvm-undname;nm;objcopy;objdump;ranlib;readelf;size;strings
 
           # Overrides
           - configuration: Debug
 
             compile_cache_max_size: 2G
-            cmake_msvc_debug_info_format_option: -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
             install_target: install-distribution
-            llvm_distribution_tools: lld;llvm-config
 
           - os: windows-2025
 
@@ -83,7 +75,7 @@ jobs:
             executable_suffix: .exe
             # The Debug package exceeds GitHub's 2 GiB release asset limit at
             # zstd's default level, so compress harder.
-            package_command: tar --options zstd:compression-level=9,zstd:threads=0 --zstd -cf
+            zstd_level: 9
             static_lib_suffix: .lib
             toolset_suffix: -msvc17
 
@@ -146,6 +138,7 @@ jobs:
             arch: x86_64
             runner: windows-2025
 
+          # GitHub has no windows-2025 image for arm64, but windows-11-arm has the same Visual Studio.
           - os: windows-2025
             arch: arm64
             runner: windows-11-arm
@@ -156,31 +149,13 @@ jobs:
       PACKAGE_NAME: llvm-${{ github.event.inputs.llvm_version }}-${{ matrix.triple_cpu }}-${{ matrix.triple_suffix }}-${{ matrix.configuration }}
 
     steps:
-      # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-      - name: Free up disk space for debug builds
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          echo "Available disk space before cleanup:"
-          df -h
-          
-          # Remove .NET and related tools
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
-          # Remove additional large packages and caches
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /usr/share/swift
-          sudo rm -rf /usr/local/lib/heroku
-          
-          # Remove unnecessary packages
-          sudo apt-get remove -y '^ghc-*' '^dotnet-*' || true
-          sudo apt-get autoremove -y
-          
-          echo "Available disk space after cleanup:"
-          df -h
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ./SourceCache/llvm-build
+          show-progress: false
+
+      - name: Free up disk space
+        uses: ./SourceCache/llvm-build/.github/actions/free-disk-space
 
       - name: Set up specific Xcode version
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
@@ -188,10 +163,45 @@ jobs:
         with:
           xcode-version: '26.0.1'
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Swift on Windows uses MSVC 14.44 and Windows SDK 10.0.22621.0. Visual Studio 2026 on the images
+      # defaults to newer ones, and libraries built with those would need them in every consumer too.
+      # We install 22621 if the runner image doesn't have it already.
+      - name: Install Windows SDK 10.0.22621.0
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path "${env:ProgramFiles(x86)}\Windows Kits\10\Include\10.0.22621.0\ucrt") { exit 0 }
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+          $vs = & "$installer\vswhere.exe" -latest -products * -property installationPath
+          $p = Start-Process -Wait -PassThru "$installer\setup.exe" -ArgumentList `
+            "modify --installPath `"$vs`" --add Microsoft.VisualStudio.Component.Windows11SDK.22621 --quiet --norestart --nocache"
+          exit $p.ExitCode
+
+      - name: Set up MSVC 14.44 with Windows SDK 10.0.22621.0
+        uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
+        if: runner.os == 'Windows'
         with:
-          path: ./SourceCache/llvm-build
-          show-progress: false
+          winsdk: "10.0.22621.0"
+          toolset_version: "14.44"
+
+      - name: Verify Windows toolchain matches the package triple
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sdk  = $env:WindowsSDKVersion.TrimEnd('\')
+          $ucrt = $env:UCRTVersion
+          $msvc = Split-Path -Leaf $env:VCToolsInstallDir.TrimEnd('\')
+          Write-Host "MSVC $msvc, Windows SDK $sdk, UCRT $ucrt"
+
+          $problems = @()
+          if ($sdk -ne '10.0.22621.0')  { $problems += "WindowsSDKVersion is $sdk, expected 10.0.22621.0" }
+          if ($ucrt -ne '10.0.22621.0') { $problems += "UCRTVersion is $ucrt, expected 10.0.22621.0" }
+          if ($msvc -notlike '14.44.*') { $problems += "MSVC toolset is $msvc, expected 14.44.x (VS 2022)" }
+
+          if ($problems) {
+            $problems | ForEach-Object { Write-Host "::error::$_" }
+            exit 1
+          }
 
       - name: Set up LLVM build tools and sources
         uses: ./SourceCache/llvm-build/.github/actions/build-tools
@@ -213,51 +223,23 @@ jobs:
           variant: sccache
           append-timestamp: false
 
-      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
-
-      - name: Workaround MSVC#10444970
-        if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
-        run: |
-          $clangTooling = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/Tooling/Inclusions/Stdlib/CMakeLists.txt"
-          Set-Content $clangTooling @"
-          $(Get-Content -Raw $clangTooling)
-          set_source_files_properties(StandardLibrary.cpp PROPERTIES
-            COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
-          "@
-
-          $clangCodeGen = "${{ github.workspace }}/SourceCache/llvm-project/clang/lib/CodeGen/CMakeLists.txt"
-          Set-Content $clangCodeGen @"
-          $(Get-Content -Raw $clangCodeGen)
-          set_source_files_properties(CGBuiltin.cpp PROPERTIES
-            COMPILE_FLAGS "/Od /Gw /Oi /Oy /Gw /Ob2 /Ot /GF")
-          "@
-
       - name: Configure LLVM
         run: >-
           cmake -GNinja
-          -D CMAKE_BUILD_TYPE=${{ matrix.configuration }}
           -S ${{ github.workspace }}/SourceCache/llvm-project/llvm
           -B ${{ github.workspace }}/BinaryCache/1
-          -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM.cmake
+          -C ${{ github.workspace }}/SourceCache/llvm-build/cmake/caches/LLVM-${{ matrix.configuration }}.cmake
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -D CMAKE_C_COMPILER_LAUNCHER=sccache
           -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
           -D CMAKE_CXX_COMPILER_LAUNCHER=sccache
-          ${{ matrix.cmake_msvc_debug_info_format_option }}
           ${{ matrix.cmake_debug_options }}
           -D CMAKE_MT=mt
           -D CMAKE_INSTALL_PREFIX=${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}
           ${{ matrix.cmake_msvc_options }}
-          -D LLVM_DISTRIBUTION_COMPONENTS="LLVMX86TargetMCA;LLVMRISCVTargetMCA;LLVMAMDGPUTargetMCA;LLVMAArch64AsmParser;LLVMAArch64CodeGen;LLVMAArch64Desc;LLVMAArch64Disassembler;LLVMAArch64Info;LLVMAArch64Utils;LLVMAggressiveInstCombine;LLVMAMDGPUAsmParser;LLVMAMDGPUCodeGen;LLVMAMDGPUDesc;LLVMAMDGPUDisassembler;LLVMAMDGPUInfo;LLVMAMDGPUUtils;LLVMAnalysis;LLVMARMAsmParser;LLVMARMCodeGen;LLVMARMDesc;LLVMARMDisassembler;LLVMARMInfo;LLVMARMUtils;LLVMAsmParser;LLVMAsmPrinter;LLVMAVRAsmParser;LLVMAVRCodeGen;LLVMAVRDesc;LLVMAVRDisassembler;LLVMAVRInfo;LLVMBinaryFormat;LLVMBitReader;LLVMBitstreamReader;LLVMBitWriter;LLVMBPFAsmParser;LLVMBPFCodeGen;LLVMBPFDesc;LLVMBPFDisassembler;LLVMBPFInfo;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoDWARFLowLevel;LLVMDebugInfoGSYM;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendDirective;LLVMFrontendHLSL;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHexagonAsmParser;LLVMHexagonCodeGen;LLVMHexagonDesc;LLVMHexagonDisassembler;LLVMHexagonInfo;LLVMHipStdPar;LLVMInstCombine;LLVMInstrumentation;LLVMipo;LLVMIRPrinter;LLVMIRReader;LLVMLanaiAsmParser;LLVMLanaiCodeGen;LLVMLanaiDesc;LLVMLanaiDisassembler;LLVMLanaiInfo;LLVMLinker;LLVMLoongArchAsmParser;LLVMLoongArchCodeGen;LLVMLoongArchDesc;LLVMLoongArchDisassembler;LLVMLoongArchInfo;LLVMMC;LLVMMCDisassembler;LLVMMCParser;LLVMMipsAsmParser;LLVMMipsCodeGen;LLVMMipsDesc;LLVMMipsDisassembler;LLVMMipsInfo;LLVMMIRParser;LLVMMSP430AsmParser;LLVMMSP430CodeGen;LLVMMSP430Desc;LLVMMSP430Disassembler;LLVMMSP430Info;LLVMNVPTXCodeGen;LLVMNVPTXDesc;LLVMNVPTXInfo;LLVMObjCARCOpts;LLVMObject;LLVMObjectYAML;LLVMPasses;LLVMPowerPCAsmParser;LLVMPowerPCCodeGen;LLVMPowerPCDesc;LLVMPowerPCDisassembler;LLVMPowerPCInfo;LLVMProfileData;LLVMRemarks;LLVMRISCVAsmParser;LLVMRISCVCodeGen;LLVMRISCVDesc;LLVMRISCVDisassembler;LLVMRISCVInfo;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSparcAsmParser;LLVMSparcCodeGen;LLVMSparcDesc;LLVMSparcDisassembler;LLVMSparcInfo;LLVMSPIRVAnalysis;LLVMSPIRVCodeGen;LLVMSPIRVDesc;LLVMSPIRVInfo;LLVMSupport;LLVMSymbolize;LLVMSystemZAsmParser;LLVMSystemZCodeGen;LLVMSystemZDesc;LLVMSystemZDisassembler;LLVMSystemZInfo;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVEAsmParser;LLVMVECodeGen;LLVMVectorize;LLVMVEDesc;LLVMVEDisassembler;LLVMVEInfo;LLVMWebAssemblyAsmParser;LLVMWebAssemblyCodeGen;LLVMWebAssemblyDesc;LLVMWebAssemblyDisassembler;LLVMWebAssemblyInfo;LLVMWebAssemblyUtils;LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Disassembler;LLVMX86Info;LLVMXCoreCodeGen;LLVMXCoreDesc;LLVMXCoreDisassembler;LLVMXCoreInfo;cmake-exports;lld-cmake-exports;LLVMAggressiveInstCombine;LLVMAnalysis;LLVMAsmParser;LLVMAsmPrinter;LLVMBinaryFormat;LLVMBitReader;LLVMBitWriter;LLVMBitstreamReader;LLVMCFGuard;LLVMCGData;LLVMCodeGen;LLVMCodeGenTypes;LLVMCore;LLVMCoroutines;LLVMDebugInfoBTF;LLVMDebugInfoCodeView;LLVMDebugInfoDWARF;LLVMDebugInfoDWARFLowLevel;LLVMDebugInfoGSYM;LLVMDebugInfoMSF;LLVMDebugInfoPDB;LLVMDemangle;LLVMFrontendAtomic;LLVMFrontendDirective;LLVMFrontendHLSL;LLVMFrontendOffloading;LLVMFrontendOpenMP;LLVMGlobalISel;LLVMHipStdPar;LLVMIRPrinter;LLVMIRReader;LLVMInstCombine;LLVMInstrumentation;LLVMLinker;LLVMMC;LLVMMCA;LLVMMCDisassembler;LLVMMCParser;LLVMObjCARCOpts;LLVMObject;LLVMObjectYAML;LLVMPasses;LLVMProfileData;LLVMRemarks;LLVMSandboxIR;LLVMScalarOpts;LLVMSelectionDAG;LLVMSupport;LLVMSymbolize;LLVMTarget;LLVMTargetParser;LLVMTextAPI;LLVMTransformUtils;LLVMVectorize;LLVMipo;llvm-headers;cmake-exports;lld-cmake-exports;${{ matrix.llvm_distribution_tools }}"
           -D LLVM_CONFIG_PATH=${{ github.workspace }}/BinaryCache/0/bin/llvm-config${{ matrix.executable_suffix }}
           -D LLVM_NATIVE_TOOL_DIR=${{ github.workspace }}/BinaryCache/0/bin
           -D LLVM_TABLEGEN=${{ github.workspace }}/BinaryCache/0/bin/llvm-tblgen${{ matrix.executable_suffix }}
-          -D LLVM_USE_HOST_TOOLS=NO
-          -D PACKAGE_VENDOR=hylo-lang.org
-          -D LLVM_APPEND_VC_REV=NO
-          -D LLVM_ENABLE_PROJECTS="lld"
-          -D LLVM_PARALLEL_LINK_JOBS=2
-          -D LLVM_VERSION_SUFFIX=""
 
       - name: Build LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target distribution ${{ runner.os == 'Windows' && matrix.configuration == 'Debug' && '--verbose' || '' }}
@@ -275,32 +257,6 @@ jobs:
  
           echo "Disk space after build cleanup:"
           df -h
-
-      - name: Additional cleanup before install
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          # Clean up more system directories if space is still tight
-          AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
-          echo "Available space: ${AVAILABLE_SPACE}KB"
-          
-          # If less than 2GB available, do aggressive cleanup
-          if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then
-            echo "Low disk space detected, performing aggressive cleanup..."
-            
-            # Remove more development tools and caches
-            sudo rm -rf /usr/local/share/vcpkg || true
-            sudo rm -rf /usr/local/share/gem || true
-            sudo rm -rf /usr/share/doc || true
-            sudo rm -rf /usr/share/man || true
-            sudo rm -rf /var/cache/apt || true
-            sudo rm -rf /tmp/* || true
-            
-            # Clear journal logs
-            sudo journalctl --vacuum-time=1d || true
-            
-            echo "Disk space after aggressive cleanup:"
-            df -h
-          fi
 
       - name: Install LLVM
         run: cmake --build ${{ github.workspace }}/BinaryCache/1 --target ${{ matrix.install_target }}
@@ -340,11 +296,11 @@ jobs:
           
           # Verify RISCV target support for ESP32-C3 cross compilation
           echo "Checking RISCV target availability..."
-          if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llc${{ matrix.executable_suffix }}" --version | grep -qi "riscv"; then
+          if "${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/bin/llvm-config${{ matrix.executable_suffix }}" --targets-built | grep -qw RISCV; then
             echo "RISCV target support detected."
           else
-            echo "ERROR: RISCV target support was not found in this package."
-            # exit 1 todo add error if it works
+            echo "::error::RISCV target support was not found in this package."
+            exit 1
           fi
 
       - name: Make llvm.pc pkg-config file
@@ -358,17 +314,22 @@ jobs:
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/install-pc.sh
           chmod +x ${{ github.workspace }}/BuildRoot/${{ env.PACKAGE_NAME }}/pkgconfig/make-absolute-pc.sh
 
+      # Don't use the image's tar for zstd: on windows-2022 it hung for hours.
       - name: Package LLVM
         working-directory: ${{ github.workspace }}/BuildRoot/
-        run: >-
+        shell: bash
+        timeout-minutes: 30
+        run: tar -cf - "${{ env.PACKAGE_NAME }}" | zstd -T0 -${{ matrix.zstd_level }} -o "${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}"
 
-          ${{ matrix.package_command }} ${{ github.workspace }}/${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }} ${{ env.PACKAGE_NAME }}
-
-      - name: Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+      - name: Upload package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          files: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
-          tag_name: ${{ needs.create_tag.outputs.tag_name }}
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}${{ matrix.package_suffix }}
+          if-no-files-found: error
+          # Already compressed.
+          compression-level: 0
+          retention-days: 3
 
       - name: Clear old sccache
         shell: bash
@@ -378,3 +339,123 @@ jobs:
           gh extension install actions/gh-actions-cache
           gh actions-cache delete sccache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package- --confirm -R ${{ github.repository }}
         continue-on-error: true
+
+  # LLVM that runs in WebAssembly, for the Hylo playground. It's built against the Swift wasm SDK
+  # and only works with that Swift version.
+  wasi:
+    needs: [checks, version]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    env:
+      SWIFT_VERSION: '6.3.2'
+      SWIFT_SDK: swift-6.3.2-RELEASE_wasm
+      # Published at https://www.swift.org/install/linux/.
+      SWIFT_SDK_URL: https://download.swift.org/swift-6.3.2-release/wasm-sdk/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE_wasm.artifactbundle.tar.gz
+      SWIFT_SDK_CHECKSUM: a61f0584c93283589f8b2f42db05c1f9a182b506c2957271402992655591dd7c
+      PACKAGE_NAME: llvm-${{ inputs.llvm_version }}-wasm32-unknown-wasip1-swift6.3.2-MinSizeRel
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ./SourceCache/llvm-build
+          show-progress: false
+
+      # Native tablegen for the cross build.
+      - name: Set up LLVM build tools and sources
+        uses: ./SourceCache/llvm-build/.github/actions/build-tools
+        with:
+          llvm_version: ${{ env.llvm_version }}
+
+      - name: Set up Swift ${{ env.SWIFT_VERSION }}
+        uses: SwiftyLab/setup-swift@38f54a76b70d989321de9dc7c840618c08cf56e9 # v1.14.0
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Install the Swift SDK for WebAssembly
+        run: swift sdk install "$SWIFT_SDK_URL" --checksum "$SWIFT_SDK_CHECKSUM"
+
+      # Not in SourceCache/llvm-project, which is cached and shared with the native builds.
+      - name: Fetch and patch the LLVM sources
+        run: |
+          git -c advice.detachedHead=false clone --quiet --depth 1 --branch "llvmorg-$llvm_version" --filter=blob:none --sparse \
+            https://github.com/llvm/llvm-project.git SourceCache/llvm-project-wasi
+          # libc for its headers.
+          git -C SourceCache/llvm-project-wasi sparse-checkout set llvm lld cmake third-party libunwind libc
+          git -C SourceCache/llvm-project-wasi apply "$GITHUB_WORKSPACE/SourceCache/llvm-build/patches/llvm-wasi-host.patch"
+
+      - name: Build LLVM
+        run: >-
+          node SourceCache/llvm-build/ci/build-llvm-wasi.ts
+          --sdk "$SWIFT_SDK"
+          --source SourceCache/llvm-project-wasi
+          --native-tools BinaryCache/0/bin
+          --build BinaryCache/wasi
+          --prefix "BuildRoot/$PACKAGE_NAME"
+
+      - name: Copy pkg-config Installation Scripts
+        run: |
+          cp SourceCache/llvm-build/scripts/install-pc.sh SourceCache/llvm-build/scripts/make-absolute-pc.sh \
+            "BuildRoot/$PACKAGE_NAME/pkgconfig/"
+
+      - name: Package LLVM
+        working-directory: ${{ github.workspace }}/BuildRoot/
+        timeout-minutes: 30
+        run: tar -cf - "$PACKAGE_NAME" | zstd -T0 -3 -o "$GITHUB_WORKSPACE/$PACKAGE_NAME.tar.zst"
+
+      - name: Upload package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.zst
+          if-no-files-found: error
+          # Already compressed.
+          compression-level: 0
+          retention-days: 3
+
+  # Release everything at once, so that a failed run doesn't leave a partial release behind.
+  release:
+    needs: [distribution, wasi]
+    if: inputs.release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          show-progress: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Download packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: packages
+          merge-multiple: true
+
+      - name: Choose the tag
+        id: tag
+        run: |
+          tag=$(git ls-remote --tags --refs origin | cut -f2 | node ci/next-release-tag.ts "$llvm_version")
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          draft: true
+          files: packages/*
+          fail_on_unmatched_files: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ steps.tag.outputs.name }}" --draft=false --repo "${{ github.repository }}"
