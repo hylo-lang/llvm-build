@@ -194,6 +194,12 @@ jobs:
           path: ./SourceCache/llvm-build
           show-progress: false
 
+      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
+        with:
+          # Must match the toolset used by dependents (Swift's Clang must support its STL).
+          # Set up before the host tools, which are also built against it.
+          toolset_version: "14.44"
+
       - name: Set up LLVM build tools and sources
         uses: ./SourceCache/llvm-build/.github/actions/build-tools
         with:
@@ -213,11 +219,6 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.configuration }}-package
           variant: sccache
           append-timestamp: false
-
-      - uses: compnerd/gha-setup-vsdevenv@452f99effa381b81c025ccfbdccaca509bff1b29 # v7
-        with:
-          # Must match the toolset used by dependents (Swift's Clang must support its STL).
-          toolset_version: "14.44"
 
       - name: Workaround MSVC#10444970
         if: ${{ matrix.arch == 'arm64' && runner.os == 'Windows' }}
